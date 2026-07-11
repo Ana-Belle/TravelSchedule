@@ -425,6 +425,33 @@ paths:
             text/html; charset=utf-8:
               schema:
                 $ref: '#/components/schemas/AllStationsResponse'
+  /v3.0/copyright/:
+    get:
+      tags:
+        - getCopyright
+      summary: Копирайт Яндекс Расписаний
+      operationId: getCopyright
+      parameters:
+      - name: apikey
+        in: query
+        description: API key
+        required: true
+        schema:
+          type: string
+      - name: format
+        in: query
+        description: Формат ответа (json или xml)
+        required: false
+        schema:
+          type: string
+          default: json
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CopyrightResponse'
 components:
   schemas:
     Stations:
@@ -581,13 +608,6 @@ components:
               description: Код железнодорожной станции в системе ЕСР (если применимо)
         type_choices:
           $ref: '#/components/schemas/Schedule'
-    Schedule1:
-      type: object
-      properties:
-        desktop_url:
-          type: string
-        touch_url:
-          type: string
     Schedule:
       type: object
       properties:
@@ -902,3 +922,35 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Station'
+    CopyrightResponse:
+      type: object
+      properties:
+        copyright:
+          $ref: '#/components/schemas/Copyright'
+    Copyright:
+      type: object
+      properties:
+        logo_vm:
+          type: string
+          description: Вертикальный монохромный баннер
+        url:
+          type: string
+          description: URL Яндекс Расписаний
+        logo_vd:
+          type: string
+          description: Вертикальный черно-белый баннер
+        logo_hy:
+          type: string
+          description: Горизонтальный цветной баннер
+        logo_hd:
+          type: string
+          description: Горизонтальный черно-белый баннер
+        logo_vy:
+          type: string
+          description: Вертикальный цветной баннер
+        text:
+          type: string
+          description: Уведомительный текст
+        logo_hm:
+          type: string
+          description: Горизонтальный монохромный баннер
