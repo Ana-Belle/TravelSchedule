@@ -20,6 +20,7 @@ struct ContentView: View {
         .padding()
         .onAppear {
             testFetchStations()
+            testCopyright()
         }
     }
     
@@ -33,7 +34,7 @@ struct ContentView: View {
                 
                 let service = NearestStationsService(
                     client: client,
-                    apikey: "c9e37d2b-084c-4bff-b9cd-08cbf3921b84"
+                    apikey: Constants.apiKey
                 )
                 
                 print("Fetching stations...")
@@ -46,6 +47,29 @@ struct ContentView: View {
                 print("Successfully fetched stations: \(stations)")
             } catch {
                 print("Error fetching stations: \(error)")
+            }
+        }
+    }
+
+    private func testCopyright() {
+        Task {
+            do {
+                let client = Client(
+                    serverURL: try Servers.Server1.url(),
+                    transport: URLSessionTransport()
+                )
+
+                let service = CopyrightService(
+                    client: client,
+                    apikey: Constants.apiKey
+                )
+
+                print("Fetching copyright...")
+                let copyright = try await service.getCopyright()
+
+                print("Successfully fetched copyright: \(copyright)")
+            } catch {
+                print("Error fetching copyright: \(error)")
             }
         }
     }
