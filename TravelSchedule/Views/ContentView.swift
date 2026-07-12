@@ -36,6 +36,7 @@ struct ContentView: View {
                 testFetchStations(client: client)
                 testCopyright(client: client)
                 testSchedualBetweenStations(client: client)
+                testStationSchedule(client: client)
 
             } catch {
                 print("Error fetching services: \(error)")
@@ -88,6 +89,27 @@ struct ContentView: View {
         }
     }
 
+    private func testStationSchedule(client: Client) {
+        Task {
+            do {
+                let service = StationScheduleService(
+                    client: client,
+                    apikey: Constants.apiKey
+                )
+
+                print("Fetching schedual between stations...")
+                let schedule = try await service.getStationSchedule(
+                    station: "s9600213",
+                    date: "2026-08-01"
+                )
+
+                print("Successfully fetched station schedule: \(schedule)")
+            } catch {
+                print("Error fetching station schedule: \(error)")
+            }
+        }
+    }
+    
     private func testCopyright(client: Client) {
         Task {
             do {
