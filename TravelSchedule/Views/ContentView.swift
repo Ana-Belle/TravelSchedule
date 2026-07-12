@@ -38,6 +38,7 @@ struct ContentView: View {
                 testSchedualBetweenStations(client: client)
                 testStationSchedule(client: client)
                 testRouteStations(client: client)
+                testNearestCity(client: client)
 
             } catch {
                 print("Error fetching services: \(error)")
@@ -128,6 +129,28 @@ struct ContentView: View {
                 print("Successfully fetched route stations: \(stations)")
             } catch {
                 print("Error route stations: \(error)")
+            }
+        }
+    }
+
+    private func testNearestCity(client: Client) {
+        Task {
+            do {
+                let service = NearestCityService(
+                    client: client,
+                    apikey: Constants.apiKey
+                )
+
+                print("Fetching nearest city...")
+                let city = try await service.getNearestCity(
+                    lat: 50.440046,
+                    lng: 40.4882367,
+                    distance: 50
+                )
+
+                print("Successfully nearest city: \(city)")
+            } catch {
+                print("Error fetching nearest city: \(error)")
             }
         }
     }
