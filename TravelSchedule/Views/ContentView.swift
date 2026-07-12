@@ -39,6 +39,7 @@ struct ContentView: View {
                 testStationSchedule(client: client)
                 testRouteStations(client: client)
                 testNearestCity(client: client)
+                testCarrierInfo(client: client)
 
             } catch {
                 print("Error fetching services: \(error)")
@@ -151,6 +152,26 @@ struct ContentView: View {
                 print("Successfully nearest city: \(city)")
             } catch {
                 print("Error fetching nearest city: \(error)")
+            }
+        }
+    }
+
+    private func testCarrierInfo(client: Client) {
+        Task {
+            do {
+                let service = CarrierInfoService(
+                    client: client,
+                    apikey: Constants.apiKey
+                )
+
+                print("Fetching carrier info...")
+                let info = try await service.getCarrierInfo(
+                    code: "TK"
+                )
+
+                print("Successfully carrier info: \(info)")
+            } catch {
+                print("Error fetching carrier info: \(error)")
             }
         }
     }
