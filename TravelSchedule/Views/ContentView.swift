@@ -19,19 +19,34 @@ struct ContentView: View {
         }
         .padding()
         .onAppear {
-            testFetchStations()
-            testCopyright()
+            testServices()
         }
     }
-    
-    private func testFetchStations() {
+
+    private func testServices() {
         Task {
             do {
                 let client = Client(
                     serverURL: try Servers.Server1.url(),
                     transport: URLSessionTransport()
                 )
-                
+
+                print("Fetching services...")
+
+                testFetchStations(client: client)
+                testCopyright(client: client)
+                testSchedualBetweenStations(client: client)
+
+            } catch {
+                print("Error fetching services: \(error)")
+            }
+        }
+    }
+
+
+    private func testFetchStations(client: Client) {
+        Task {
+            do {
                 let service = NearestStationsService(
                     client: client,
                     apikey: Constants.apiKey
@@ -51,14 +66,31 @@ struct ContentView: View {
         }
     }
 
-    private func testCopyright() {
+    private func testSchedualBetweenStations(client: Client) {
         Task {
             do {
-                let client = Client(
-                    serverURL: try Servers.Server1.url(),
-                    transport: URLSessionTransport()
+                let service = SchedualBetweenStationsService(
+                    client: client,
+                    apikey: Constants.apiKey
                 )
 
+                print("Fetching schedual between stations...")
+                let schedual = try await service.getSchedualBetweenStations(
+                    from: "c146",
+                    to: "c213",
+                    date: "2026-08-01"
+                )
+
+                print("Successfully fetched schedual between stations: \(schedual)")
+            } catch {
+                print("Error fetching schedual between stations: \(error)")
+            }
+        }
+    }
+
+    private func testCopyright(client: Client) {
+        Task {
+            do {
                 let service = CopyrightService(
                     client: client,
                     apikey: Constants.apiKey

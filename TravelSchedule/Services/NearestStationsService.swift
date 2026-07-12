@@ -5,7 +5,6 @@
 //  Created by Anastasia Belyakova on 10.07.2026.
 //
 
-// 1. Импортируем библиотеки:
 import OpenAPIRuntime
 import OpenAPIURLSession
 
@@ -22,16 +21,7 @@ protocol NearestStationsServiceProtocol {
 }
 
 // Конкретная реализация сервиса
-final class NearestStationsService: NearestStationsServiceProtocol {
-    // Хранит экземпляр сгенерированного клиента
-    private let client: Client
-    // Хранит API-ключ (лучше передавать его извне, чем хранить прямо в сервисе)
-    private let apikey: String
-    
-    init(client: Client, apikey: String) {
-        self.client = client
-        self.apikey = apikey
-    }
+final class NearestStationsService: BaseService, NearestStationsServiceProtocol {
     
     func getNearestStations(lat: Double, lng: Double, distance: Int) async throws -> NearestStations {
         // Вызываем функцию getNearestStations на ЭКЗЕМПЛЯРЕ сгенерированного клиента.
