@@ -34,12 +34,13 @@ struct ContentView: View {
                 print("Fetching services...")
 
                 testFetchStations(client: client)
-                testCopyright(client: client)
                 testSchedualBetweenStations(client: client)
                 testStationSchedule(client: client)
                 testRouteStations(client: client)
                 testNearestCity(client: client)
                 testCarrierInfo(client: client)
+                testAllStations(client: client)
+                testCopyright(client: client)
 
             } catch {
                 print("Error fetching services: \(error)")
@@ -172,6 +173,24 @@ struct ContentView: View {
                 print("Successfully carrier info: \(info)")
             } catch {
                 print("Error fetching carrier info: \(error)")
+            }
+        }
+    }
+
+    private func testAllStations(client: Client) {
+        Task {
+            do {
+                let service = AllStationsService(
+                    client: client,
+                    apikey: Constants.apiKey
+                )
+
+                print("Fetching all stations...")
+                let stations = try await service.getAllStations()
+
+                print("Successfully fetched all stations: \(stations)")
+            } catch {
+                print("Error fetching all stations: \(error)")
             }
         }
     }
