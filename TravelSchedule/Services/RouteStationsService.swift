@@ -15,15 +15,15 @@ protocol RouteStationsServiceProtocol {
 }
 
 final class RouteStationsService: BaseService, RouteStationsServiceProtocol {
-
+    
     func getRouteStations(uid: String, date: String? = nil) async throws -> RouteStations {
-
+        
         let response = try await client.getRouteStations(query: .init(
             apikey: apikey,
             uid: uid,
             date: date
         ))
-
+        
         return try response.ok.body.json
     }
 }
