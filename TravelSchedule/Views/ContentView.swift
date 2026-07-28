@@ -12,7 +12,7 @@ import OpenAPIURLSession
 struct ContentView: View {
     var body: some View {
         VStack {
-            Image(systemName: "globe")
+            Image(systemName: SystemName.globe)
                 .imageScale(.large)
                 .foregroundStyle(.tint)
             Text("Hello, world!")
@@ -34,14 +34,14 @@ struct ContentView: View {
                 print("Fetching services...")
                 
                 testFetchStations(client: client)
-                testSchedualBetweenStations(client: client)
+                testScheduleBetweenStations(client: client)
                 testStationSchedule(client: client)
                 testRouteStations(client: client)
                 testNearestCity(client: client)
                 testCarrierInfo(client: client)
                 testAllStations(client: client)
                 testCopyright(client: client)
-                
+
             } catch {
                 print("Error fetching services: \(error)")
             }
@@ -71,24 +71,24 @@ struct ContentView: View {
         }
     }
     
-    private func testSchedualBetweenStations(client: Client) {
+    private func testScheduleBetweenStations(client: Client) {
         Task {
             do {
-                let service = SchedualBetweenStationsService(
+                let service = ScheduleBetweenStationsService(
                     client: client,
                     apikey: Constants.apiKey
                 )
                 
                 print("Fetching schedual between stations...")
-                let schedual = try await service.getSchedualBetweenStations(
+                let schedule = try await service.getScheduleBetweenStations(
                     from: "c146",
                     to: "c213",
                     date: "2026-08-01"
                 )
                 
-                print("Successfully fetched schedual between stations: \(schedual)")
+                print("Successfully fetched schedual between stations: \(schedule)")
             } catch {
-                print("Error fetching schedual between stations: \(error)")
+                print("Error fetching schedule between stations: \(error)")
             }
         }
     }
