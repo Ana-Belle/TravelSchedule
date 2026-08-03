@@ -41,7 +41,7 @@ struct ContentView: View {
                 testCarrierInfo(client: client)
                 testAllStations(client: client)
                 testCopyright(client: client)
-
+                
             } catch {
                 print("Error fetching services: \(error)")
             }
@@ -79,14 +79,14 @@ struct ContentView: View {
                     apikey: Constants.apiKey
                 )
                 
-                print("Fetching schedual between stations...")
+                print("Fetching schedule between stations...")
                 let schedule = try await service.getScheduleBetweenStations(
                     from: "c146",
                     to: "c213",
                     date: "2026-08-01"
                 )
                 
-                print("Successfully fetched schedual between stations: \(schedule)")
+                print("Successfully fetched schedule between stations: \(schedule)")
             } catch {
                 print("Error fetching schedule between stations: \(error)")
             }
@@ -101,7 +101,7 @@ struct ContentView: View {
                     apikey: Constants.apiKey
                 )
                 
-                print("Fetching schedual between stations...")
+                print("Fetching schedule between stations...")
                 let schedule = try await service.getStationSchedule(
                     station: "s9600213",
                     date: "2026-08-01"

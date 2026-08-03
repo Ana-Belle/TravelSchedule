@@ -9,11 +9,15 @@ import SwiftUI
 
 struct SettingsView: View {
     var body: some View {
-        VStack {
-            Image("Settings")
-            Text("Настройки")
-        }
-        .padding()
+        Color.whiteDayNight
+            .ignoresSafeArea()
+            .overlay {
+                VStack {
+                    Image("Settings")
+                    Text("Настройки")
+                }
+                .padding()
+            }
     }
 }
 

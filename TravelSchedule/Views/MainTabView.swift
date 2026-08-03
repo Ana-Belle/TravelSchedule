@@ -8,18 +8,38 @@
 import SwiftUI
 
 struct MainTabView: View {
+    init() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .whiteDayNight
+        appearance.stackedLayoutAppearance.normal.iconColor = .grayUniversal
+        appearance.stackedLayoutAppearance.selected.iconColor = .blackDayNight
+        appearance.inlineLayoutAppearance.normal.iconColor = .grayUniversal
+        appearance.inlineLayoutAppearance.selected.iconColor = .blackDayNight
+        appearance.compactInlineLayoutAppearance.normal.iconColor = .grayUniversal
+        appearance.compactInlineLayoutAppearance.selected.iconColor = .blackDayNight
+        
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+        UITabBar.appearance().unselectedItemTintColor = .grayUniversal
+        UITabBar.appearance().tintColor = .blackDayNight
+    }
+    
     var body: some View {
         TabView {
-            ContentView()
+            ScheduleView()
                 .tabItem {
                     Image("Schedule")
+                        .renderingMode(.template)
                 }
-
+            
             SettingsView()
                 .tabItem {
                     Image("Settings")
+                        .renderingMode(.template)
                 }
         }
+        .tint(.blackDayNight)
     }
 }
 
