@@ -58,12 +58,41 @@ final class CitySelectionViewModel {
                     else { continue }
 
                     seenCodes.insert(code)
-                    cities.append(City(id: code, title: title))
+                    cities.append(
+                        City(
+                            id: code,
+                            title: title,
+                            stations: extractStations(from: settlement)
+                        )
+                    )
                 }
             }
         }
 
         return cities.sorted {
+            $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
+        }
+    }
+
+    private static func extractStations(from settlement: Components.Schemas.Settlement) -> [Station] {
+        var stations: [Station] = []
+        var seenCodes = Set<String>()
+
+        for station in settlement.stations ?? [] {
+            let code = station.codes?.yandex_code ?? station.code
+            guard
+                let code,
+                !seenCodes.contains(code)
+            else { continue }
+
+            let title = station.title ?? station.popular_title ?? station.short_title
+            guard let title else { continue }
+
+            seenCodes.insert(code)
+            stations.append(Station(id: code, title: title))
+        }
+
+        return stations.sorted {
             $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
         }
     }

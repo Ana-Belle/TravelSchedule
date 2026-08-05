@@ -8,27 +8,43 @@
 import SwiftUI
 
 private enum ScheduleDestination: Hashable {
-    case citySelection
+    case citySelection(StationField)
 }
 
 struct ScheduleView: View {
     @State private var navigationPath = NavigationPath()
-    
+    @State private var fromStationTitle = StationField.from.placeholder
+    @State private var toStationTitle = StationField.to.placeholder
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             scheduleContent
                 .navigationDestination(for: ScheduleDestination.self) { destination in
                     switch destination {
-                    case .citySelection:
-                        CitySelectionView()
+                    case .citySelection(let field):
+                        CitySelectionView(
+                            field: field,
+                            fromStationTitle: $fromStationTitle,
+                            toStationTitle: $toStationTitle,
+                            navigationPath: $navigationPath
+                        )
                     }
+                }
+                .navigationDestination(for: StationRoute.self) { route in
+                    StationSelectionView(
+                        city: route.city,
+                        field: route.field,
+                        fromStationTitle: $fromStationTitle,
+                        toStationTitle: $toStationTitle,
+                        navigationPath: $navigationPath
+                    )
                 }
         }
     }
-    
+
     private var scheduleContent: some View {
         GeometryReader { _ in
-            
+
             Color.whiteDayNight
                 .overlay(alignment: .top) {
                     RoundedRectangle(cornerRadius: 20)
@@ -38,25 +54,23 @@ struct ScheduleView: View {
                                 Section {
                                     VStack {
                                         Section {
-                                            Button {
-                                                navigationPath.append(ScheduleDestination.citySelection)
-                                            } label: {
-                                                Text("Откуда")
-                                                    .foregroundStyle(.grayUniversal)
+                                            NavigationLink(value: ScheduleDestination.citySelection(.from)) {
+                                                Text(fromStationTitle)
+                                                    .foregroundStyle(stationTitleColor(for: .from))
                                                     .font(.system(size: 17, weight: .regular))
                                                     .frame(maxWidth: .infinity, alignment: .leading)
+                                                    .contentShape(Rectangle())
                                             }
                                             .buttonStyle(.plain)
                                             .padding(.top, 14)
                                         }
                                         Section {
-                                            Button {
-                                                navigationPath.append(ScheduleDestination.citySelection)
-                                            } label: {
-                                                Text("Куда")
-                                                    .foregroundStyle(.grayUniversal)
+                                            NavigationLink(value: ScheduleDestination.citySelection(.to)) {
+                                                Text(toStationTitle)
+                                                    .foregroundStyle(stationTitleColor(for: .to))
                                                     .font(.system(size: 17, weight: .regular))
                                                     .frame(maxWidth: .infinity, alignment: .leading)
+                                                    .contentShape(Rectangle())
                                             }
                                             .buttonStyle(.plain)
                                             .padding(.top, 14)
@@ -69,7 +83,7 @@ struct ScheduleView: View {
                                             .fill(.whiteUniversal)
                                     }
                                 }
-                                
+
                                 Section {
                                     Button {} label: {
                                         Image("Change")
@@ -94,6 +108,15 @@ struct ScheduleView: View {
                 }
         }
         .ignoresSafeArea()
+    }
+
+    private func stationTitleColor(for field: StationField) -> Color {
+        switch field {
+        case .from:
+            fromStationTitle == field.placeholder ? .grayUniversal : .blackDayNight
+        case .to:
+            toStationTitle == field.placeholder ? .grayUniversal : .blackDayNight
+        }
     }
 }
 

@@ -8,24 +8,33 @@
 import SwiftUI
 
 struct CitySelectionView: View {
+    let field: StationField
+    @Binding var fromStationTitle: String
+    @Binding var toStationTitle: String
+    @Binding var navigationPath: NavigationPath
+
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
     @State private var viewModel = CitySelectionViewModel()
-    
+
     private var filteredCities: [City] {
         viewModel.filteredCities(searchText: searchText)
     }
-    
+
     private var isSearchActive: Bool {
         !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
-    
+
     var body: some View {
+        citySelectionContent
+    }
+
+    private var citySelectionContent: some View {
         VStack(spacing: 16) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.grayUniversal)
-                
+
                 TextField(
                     "",
                     text: $searchText,
@@ -44,7 +53,7 @@ struct CitySelectionView: View {
                     .fill(.lightGray)
             }
             .padding(.horizontal, 16)
-            
+
             Group {
                 if viewModel.isLoading {
                     ProgressView()
@@ -63,14 +72,16 @@ struct CitySelectionView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List(filteredCities) { city in
-                        Text(city.title)
-                            .foregroundStyle(.blackDayNight)
-                            .font(.system(size: 17, weight: .regular))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .frame(height: 60)
-                            .listRowBackground(Color.whiteDayNight)
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                        NavigationLink(value: StationRoute(city: city, field: field)) {
+                            Text(city.title)
+                                .foregroundStyle(.blackDayNight)
+                                .font(.system(size: 17, weight: .regular))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(height: 60)
+                        }
+                        .listRowBackground(Color.whiteDayNight)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                     }
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
@@ -99,7 +110,16 @@ struct CitySelectionView: View {
 }
 
 #Preview {
+    @Previewable @State var fromStationTitle = StationField.from.placeholder
+    @Previewable @State var toStationTitle = StationField.to.placeholder
+    @Previewable @State var navigationPath = NavigationPath()
+
     NavigationStack {
-        CitySelectionView()
+        CitySelectionView(
+            field: .from,
+            fromStationTitle: $fromStationTitle,
+            toStationTitle: $toStationTitle,
+            navigationPath: $navigationPath
+        )
     }
 }
