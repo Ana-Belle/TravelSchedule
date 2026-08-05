@@ -13,8 +13,8 @@ private enum ScheduleDestination: Hashable {
 
 struct ScheduleView: View {
     @State private var navigationPath = NavigationPath()
-    @State private var fromStationTitle = StationField.from.placeholder
-    @State private var toStationTitle = StationField.to.placeholder
+    @State private var fromStation: String?
+    @State private var toStation: String?
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -24,8 +24,8 @@ struct ScheduleView: View {
                     case .citySelection(let field):
                         CitySelectionView(
                             field: field,
-                            fromStationTitle: $fromStationTitle,
-                            toStationTitle: $toStationTitle,
+                            fromStation: $fromStation,
+                            toStation: $toStation,
                             navigationPath: $navigationPath
                         )
                     }
@@ -34,8 +34,8 @@ struct ScheduleView: View {
                     StationSelectionView(
                         city: route.city,
                         field: route.field,
-                        fromStationTitle: $fromStationTitle,
-                        toStationTitle: $toStationTitle,
+                        fromStation: $fromStation,
+                        toStation: $toStation,
                         navigationPath: $navigationPath
                     )
                 }
@@ -55,7 +55,7 @@ struct ScheduleView: View {
                                     VStack {
                                         Section {
                                             NavigationLink(value: ScheduleDestination.citySelection(.from)) {
-                                                Text(fromStationTitle)
+                                                Text(fromStation ?? StationField.from.placeholder)
                                                     .foregroundStyle(stationTitleColor(for: .from))
                                                     .font(.system(size: 17, weight: .regular))
                                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -66,7 +66,7 @@ struct ScheduleView: View {
                                         }
                                         Section {
                                             NavigationLink(value: ScheduleDestination.citySelection(.to)) {
-                                                Text(toStationTitle)
+                                                Text(toStation ?? StationField.to.placeholder)
                                                     .foregroundStyle(stationTitleColor(for: .to))
                                                     .font(.system(size: 17, weight: .regular))
                                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -85,7 +85,9 @@ struct ScheduleView: View {
                                 }
 
                                 Section {
-                                    Button {} label: {
+                                    Button {
+                                        swap(&fromStation, &toStation)
+                                    } label: {
                                         Image("Change")
                                             .frame(width: 36, height: 36)
                                             .background(.whiteUniversal, in: Circle())
@@ -113,9 +115,9 @@ struct ScheduleView: View {
     private func stationTitleColor(for field: StationField) -> Color {
         switch field {
         case .from:
-            fromStationTitle == field.placeholder ? .grayUniversal : .blackDayNight
+            fromStation == nil ? .grayUniversal : .blackDayNight
         case .to:
-            toStationTitle == field.placeholder ? .grayUniversal : .blackDayNight
+            toStation == nil ? .grayUniversal : .blackDayNight
         }
     }
 }
