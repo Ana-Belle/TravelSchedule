@@ -7,8 +7,26 @@
 
 import SwiftUI
 
+private enum ScheduleDestination: Hashable {
+    case citySelection
+}
+
 struct ScheduleView: View {
+    @State private var navigationPath = NavigationPath()
+    
     var body: some View {
+        NavigationStack(path: $navigationPath) {
+            scheduleContent
+                .navigationDestination(for: ScheduleDestination.self) { destination in
+                    switch destination {
+                    case .citySelection:
+                        CitySelectionView()
+                    }
+                }
+        }
+    }
+    
+    private var scheduleContent: some View {
         GeometryReader { _ in
             
             Color.whiteDayNight
@@ -20,7 +38,9 @@ struct ScheduleView: View {
                                 Section {
                                     VStack {
                                         Section {
-                                            Button {} label: {
+                                            Button {
+                                                navigationPath.append(ScheduleDestination.citySelection)
+                                            } label: {
                                                 Text("Откуда")
                                                     .foregroundStyle(.grayUniversal)
                                                     .font(.system(size: 17, weight: .regular))
@@ -30,7 +50,9 @@ struct ScheduleView: View {
                                             .padding(.top, 14)
                                         }
                                         Section {
-                                            Button {} label: {
+                                            Button {
+                                                navigationPath.append(ScheduleDestination.citySelection)
+                                            } label: {
                                                 Text("Куда")
                                                     .foregroundStyle(.grayUniversal)
                                                     .font(.system(size: 17, weight: .regular))
