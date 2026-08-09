@@ -14,7 +14,7 @@ import OpenAPIURLSession
 final class CitySelectionViewModel {
     var cities: [City] = []
     var isLoading = false
-    var errorMessage: String?
+    var errorState: AppErrorState?
 
     func filteredCities(searchText: String) -> [City] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -27,7 +27,7 @@ final class CitySelectionViewModel {
 
     func loadCities() async {
         isLoading = true
-        errorMessage = nil
+        errorState = nil
 
         defer { isLoading = false }
 
@@ -40,7 +40,7 @@ final class CitySelectionViewModel {
             let response = try await service.getAllStations()
             cities = Self.extractCities(from: response)
         } catch {
-            errorMessage = error.localizedDescription
+            errorState = AppErrorState(error: error)
         }
     }
 

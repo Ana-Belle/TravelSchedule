@@ -21,6 +21,33 @@ struct ScheduleResultView: View {
     }
 
     var body: some View {
+        Group {
+            if let errorState = viewModel.errorState {
+                ErrorStateView(kind: errorState)
+            } else {
+                scheduleContent
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color.whiteDayNight)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(viewModel.errorState == nil ? .hidden : .visible, for: .tabBar)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.backward")
+                }
+            }
+        }
+        .task {
+            await viewModel.loadSchedule()
+        }
+    }
+
+    private var scheduleContent: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(viewModel.routeTitle)
                 .foregroundStyle(.blackDayNight)
@@ -31,13 +58,6 @@ struct ScheduleResultView: View {
             Group {
                 if viewModel.isLoading {
                     ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if let errorMessage = viewModel.errorMessage {
-                    Text(errorMessage)
-                        .foregroundStyle(.grayUniversal)
-                        .font(.system(size: 17, weight: .regular))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 16)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if viewModel.scheduleItems.isEmpty {
                     Text("Вариантов нет")
@@ -99,23 +119,6 @@ struct ScheduleResultView: View {
                     .scrollContentBackground(.hidden)
                 }
             }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color.whiteDayNight)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .tabBar)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.backward")
-                }
-            }
-        }
-        .task {
-            await viewModel.loadSchedule()
         }
     }
 }

@@ -17,7 +17,7 @@ final class ScheduleResultViewModel {
 
     var scheduleItems: [ScheduleItem] = []
     var isLoading = false
-    var errorMessage: String?
+    var errorState: AppErrorState?
 
     var routeTitle: String {
         "\(fromStation.title) → \(toStation.title)"
@@ -30,7 +30,7 @@ final class ScheduleResultViewModel {
 
     func loadSchedule() async {
         isLoading = true
-        errorMessage = nil
+        errorState = nil
 
         defer { isLoading = false }
 
@@ -43,7 +43,7 @@ final class ScheduleResultViewModel {
             let segments = try await fetchAllSegments(service: service)
             scheduleItems = Self.extractScheduleItems(from: segments)
         } catch {
-            errorMessage = error.localizedDescription
+            errorState = AppErrorState(error: error)
         }
     }
 
