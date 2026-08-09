@@ -13,8 +13,8 @@ private enum ScheduleDestination: Hashable {
 
 struct ScheduleView: View {
     @State private var navigationPath = NavigationPath()
-    @State private var fromStation: String?
-    @State private var toStation: String?
+    @State private var fromStation: Station?
+    @State private var toStation: Station?
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -39,6 +39,12 @@ struct ScheduleView: View {
                         navigationPath: $navigationPath
                     )
                 }
+                .navigationDestination(for: ScheduleSearchRoute.self) { route in
+                    ScheduleResultView(
+                        fromStation: route.fromStation,
+                        toStation: route.toStation
+                    )
+                }
         }
     }
 
@@ -60,7 +66,7 @@ struct ScheduleView: View {
                                         VStack {
                                             Section {
                                                 NavigationLink(value: ScheduleDestination.citySelection(.from)) {
-                                                    Text(fromStation ?? StationField.from.placeholder)
+                                                    Text(fromStation?.title ?? StationField.from.placeholder)
                                                         .foregroundStyle(stationTitleColor(for: .from))
                                                         .font(.system(size: 17, weight: .regular))
                                                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -71,7 +77,7 @@ struct ScheduleView: View {
                                             }
                                             Section {
                                                 NavigationLink(value: ScheduleDestination.citySelection(.to)) {
-                                                    Text(toStation ?? StationField.to.placeholder)
+                                                    Text(toStation?.title ?? StationField.to.placeholder)
                                                         .foregroundStyle(stationTitleColor(for: .to))
                                                         .font(.system(size: 17, weight: .regular))
                                                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -109,7 +115,16 @@ struct ScheduleView: View {
                             .frame(height: 128)
 
                         if areStationsSelected {
-                            Button {} label: {
+                            Button {
+                                if let fromStation, let toStation {
+                                    navigationPath.append(
+                                        ScheduleSearchRoute(
+                                            fromStation: fromStation,
+                                            toStation: toStation
+                                        )
+                                    )
+                                }
+                            } label: {
                                 Text("Найти")
                                     .font(.system(size: 17, weight: .bold))
                                     .foregroundStyle(.whiteUniversal)

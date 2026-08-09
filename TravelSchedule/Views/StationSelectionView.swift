@@ -10,8 +10,8 @@ import SwiftUI
 struct StationSelectionView: View {
     let city: City
     let field: StationField
-    @Binding var fromStation: String?
-    @Binding var toStation: String?
+    @Binding var fromStation: Station?
+    @Binding var toStation: Station?
     @Binding var navigationPath: NavigationPath
 
     @Environment(\.dismiss) private var dismiss
@@ -21,8 +21,8 @@ struct StationSelectionView: View {
     init(
         city: City,
         field: StationField,
-        fromStation: Binding<String?>,
-        toStation: Binding<String?>,
+        fromStation: Binding<Station?>,
+        toStation: Binding<Station?>,
         navigationPath: Binding<NavigationPath>
     ) {
         self.city = city
@@ -111,9 +111,9 @@ struct StationSelectionView: View {
     private func selectStation(_ station: Station) {
         switch field {
         case .from:
-            fromStation = station.title
+            fromStation = station
         case .to:
-            toStation = station.title
+            toStation = station
         }
 
         navigationPath = NavigationPath()
@@ -121,8 +121,8 @@ struct StationSelectionView: View {
 }
 
 #Preview {
-    @Previewable @State var fromStation: String?
-    @Previewable @State var toStation: String?
+    @Previewable @State var fromStation: Station?
+    @Previewable @State var toStation: Station?
     @Previewable @State var navigationPath = NavigationPath()
 
     NavigationStack {
