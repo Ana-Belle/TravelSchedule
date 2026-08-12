@@ -16,7 +16,9 @@ protocol ScheduleBetweenStationsServiceProtocol {
         to: String,
         date: String?,
         offset: Int?,
-        limit: Int?
+        limit: Int?,
+        transfers: Bool?,
+        resultTimeZone: String?
     ) async throws -> ScheduleBetweenStations
 }
 
@@ -27,7 +29,9 @@ final class ScheduleBetweenStationsService: BaseService, ScheduleBetweenStations
         to: String,
         date: String? = nil,
         offset: Int? = nil,
-        limit: Int? = nil
+        limit: Int? = nil,
+        transfers: Bool? = nil,
+        resultTimeZone: String? = ScheduleDateFormatting.resultTimeZoneIdentifier
     ) async throws -> ScheduleBetweenStations {
 
         let response = try await client.getScheduleBetweenStations(query: .init(
@@ -36,7 +40,9 @@ final class ScheduleBetweenStationsService: BaseService, ScheduleBetweenStations
             to: to,
             date: date,
             offset: offset,
-            limit: limit
+            limit: limit,
+            result_timezone: resultTimeZone,
+            transfers: transfers
         ))
         
         return try response.ok.body.json

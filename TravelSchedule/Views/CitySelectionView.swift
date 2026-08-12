@@ -35,11 +35,16 @@ struct CitySelectionView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.whiteDayNight)
-        .navigationTitle("Выбор города")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(viewModel.errorState == nil ? .hidden : .visible, for: .tabBar)
         .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Выбор города")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(.blackDayNight)
+            }
+
             ToolbarItem(placement: .topBarLeading) {
                 Button {
                     dismiss()
@@ -74,7 +79,7 @@ struct CitySelectionView: View {
             .padding(.vertical, 13)
             .background {
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(.lightGray)
+                    .fill(.lightGraySearch)
             }
             .padding(.horizontal, 16)
 
@@ -109,16 +114,26 @@ struct CitySelectionView: View {
 }
 
 #Preview {
-    @Previewable @State var fromStation: Station?
-    @Previewable @State var toStation: Station?
-    @Previewable @State var navigationPath = NavigationPath()
+    CitySelectionViewPreview()
+}
 
-    NavigationStack {
-        CitySelectionView(
-            field: .from,
-            fromStation: $fromStation,
-            toStation: $toStation,
-            navigationPath: $navigationPath
-        )
+private struct CitySelectionViewPreview: View {
+    @State private var fromStation: Station?
+    @State private var toStation: Station?
+    @State private var navigationPath = NavigationPath()
+
+    init() {
+        _ = APIServices.bootstrap()
+    }
+
+    var body: some View {
+        NavigationStack {
+            CitySelectionView(
+                field: .from,
+                fromStation: $fromStation,
+                toStation: $toStation,
+                navigationPath: $navigationPath
+            )
+        }
     }
 }

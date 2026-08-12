@@ -7,7 +7,6 @@
 
 import Foundation
 import OpenAPIRuntime
-import OpenAPIURLSession
 
 @MainActor
 @Observable
@@ -17,94 +16,251 @@ final class ScheduleResultViewModel {
 
     var scheduleItems: [ScheduleItem] = []
     var isLoading = false
+    var isLoadingMore = false
+    var hasMoreDays = true
+    var hasCompletedInitialLoad = false
     var errorState: AppErrorState?
+    var filters = ScheduleFilters()
+    var isFilterPresented = false
+
+    private var cacheWithTransfers = ScheduleCache()
+    private var cacheDirect = ScheduleCache()
+
+    private let initialDayCount = 3
+    private let loadMoreDayCount = 3
+    private let maxDays = 90
+
+    private let scheduleService: ScheduleBetweenStationsServiceProtocol
 
     var routeTitle: String {
         "\(fromStation.title) → \(toStation.title)"
     }
 
-    init(fromStation: Station, toStation: Station) {
+    var hasLoadedSchedule: Bool {
+        !cacheWithTransfers.items.isEmpty || !cacheDirect.items.isEmpty
+    }
+
+    init(
+        fromStation: Station,
+        toStation: Station,
+        scheduleService: ScheduleBetweenStationsServiceProtocol = APIServices.shared.scheduleBetweenStations
+    ) {
         self.fromStation = fromStation
         self.toStation = toStation
+        self.scheduleService = scheduleService
+    }
+
+    private var effectiveTransfers: TransfersFilter {
+        filters.transfers ?? .yes
     }
 
     func loadSchedule() async {
         isLoading = true
         errorState = nil
+        cacheWithTransfers = ScheduleCache()
+        cacheDirect = ScheduleCache()
+        scheduleItems = []
+        hasMoreDays = true
+        hasCompletedInitialLoad = false
 
-        defer { isLoading = false }
+        defer {
+            isLoading = false
+            hasCompletedInitialLoad = true
+            syncPaginationState()
+        }
 
         do {
-            let client = Client(
-                serverURL: try Servers.Server1.url(),
-                transport: URLSessionTransport()
-            )
-            let service = ScheduleBetweenStationsService(client: client, apikey: Constants.apiKey)
-            let segments = try await fetchAllSegments(service: service)
-            scheduleItems = Self.extractScheduleItems(from: segments)
+            try await loadInitialBatch(for: effectiveTransfers, service: scheduleService)
+            applyFilters(filters)
         } catch {
             errorState = AppErrorState(error: error)
         }
     }
 
-    private func fetchAllSegments(service: ScheduleBetweenStationsServiceProtocol) async throws -> [Components.Schemas.Segment] {
-        let calendar = Calendar.current
-        let startDate = calendar.startOfDay(for: Date())
-        var allSegments: [Components.Schemas.Segment] = []
-        var dayOffset = 0
-        let batchSize = 7
-        let maxDays = 90
+    func loadMoreIfNeeded() async {
+        guard hasCompletedInitialLoad, hasMoreDays, !isLoading, !isLoadingMore else { return }
 
-        while dayOffset < maxDays {
-            let batchEnd = min(dayOffset + batchSize, maxDays)
-            let batchSegments = try await fetchSegmentsBatch(
-                service: service,
-                calendar: calendar,
-                startDate: startDate,
-                dayRange: dayOffset..<batchEnd
-            )
-
-            if batchSegments.isEmpty {
-                break
-            }
-
-            allSegments.append(contentsOf: batchSegments)
-            dayOffset = batchEnd
+        isLoadingMore = true
+        defer {
+            isLoadingMore = false
+            syncPaginationState()
         }
 
-        return allSegments
+        do {
+            try await loadNextDays(count: loadMoreDayCount, for: effectiveTransfers, service: scheduleService)
+            applyFilters(filters)
+        } catch {
+            errorState = AppErrorState(error: error)
+        }
+    }
+
+    func applyFilters(_ appliedFilters: ScheduleFilters) {
+        filters = appliedFilters
+
+        if activeCache.hasInitialLoad {
+            scheduleItems = filterItems(activeItems)
+            return
+        }
+
+        Task {
+            await ensureActiveCacheLoaded()
+            scheduleItems = filterItems(activeItems)
+        }
+    }
+
+    private func ensureActiveCacheLoaded() async {
+        guard !activeCache.hasInitialLoad else { return }
+
+        let useSoftLoading = hasCompletedInitialLoad && hasLoadedSchedule
+
+        if useSoftLoading {
+            isLoadingMore = true
+        } else {
+            isLoading = true
+        }
+
+        defer {
+            isLoading = false
+            isLoadingMore = false
+            syncPaginationState()
+        }
+
+        do {
+            try await loadInitialBatch(for: effectiveTransfers, service: scheduleService)
+        } catch {
+            errorState = AppErrorState(error: error)
+        }
+    }
+
+    private var activeItems: [ScheduleItem] {
+        switch effectiveTransfers {
+        case .yes:
+            cacheWithTransfers.items
+        case .no:
+            cacheDirect.items
+        }
+    }
+
+    private var activeCache: ScheduleCache {
+        switch effectiveTransfers {
+        case .yes:
+            cacheWithTransfers
+        case .no:
+            cacheDirect
+        }
+    }
+
+    private func syncPaginationState() {
+        hasMoreDays = activeCache.hasMoreDays
+    }
+
+    private func loadInitialBatch(
+        for transfers: TransfersFilter,
+        service: ScheduleBetweenStationsServiceProtocol
+    ) async throws {
+        try await loadNextDays(count: initialDayCount, for: transfers, service: service)
+
+        var currentCache = scheduleCache(for: transfers)
+        while currentCache.items.isEmpty && currentCache.hasMoreDays {
+            try await loadNextDays(count: loadMoreDayCount, for: transfers, service: service)
+            currentCache = scheduleCache(for: transfers)
+        }
+
+        setScheduleCache(scheduleCache(for: transfers).withInitialLoadCompleted(), for: transfers)
+    }
+
+    private func loadNextDays(
+        count: Int,
+        for transfers: TransfersFilter,
+        service: ScheduleBetweenStationsServiceProtocol
+    ) async throws {
+        var currentCache = scheduleCache(for: transfers)
+
+        guard currentCache.nextDayOffset < maxDays else {
+            currentCache.hasMoreDays = false
+            setScheduleCache(currentCache, for: transfers)
+            return
+        }
+
+        let calendar = ScheduleDateFormatting.calendar
+        let startDate = calendar.startOfDay(for: Date())
+        let batchEnd = min(currentCache.nextDayOffset + count, maxDays)
+
+        let batchSegments = try await fetchSegmentsBatch(
+            service: service,
+            calendar: calendar,
+            startDate: startDate,
+            dayRange: currentCache.nextDayOffset..<batchEnd,
+            includeTransfers: transfers == .yes
+        )
+
+        let newItems = Self.extractScheduleItems(from: batchSegments)
+        currentCache.items.append(contentsOf: newItems)
+        currentCache.items.sort { $0.departure < $1.departure }
+
+        currentCache.nextDayOffset = batchEnd
+        currentCache.hasMoreDays = currentCache.nextDayOffset < maxDays
+        setScheduleCache(currentCache, for: transfers)
+    }
+
+    private func scheduleCache(for transfers: TransfersFilter) -> ScheduleCache {
+        switch transfers {
+        case .yes:
+            cacheWithTransfers
+        case .no:
+            cacheDirect
+        }
+    }
+
+    private func setScheduleCache(_ cache: ScheduleCache, for transfers: TransfersFilter) {
+        switch transfers {
+        case .yes:
+            cacheWithTransfers = cache
+        case .no:
+            cacheDirect = cache
+        }
+    }
+
+    private func filterItems(_ items: [ScheduleItem]) -> [ScheduleItem] {
+        guard !filters.selectedPeriods.isEmpty else { return items }
+
+        return items.filter { item in
+            filters.selectedPeriods.contains { period in
+                period.contains(departureTime: item.departureTime)
+            }
+        }
     }
 
     private func fetchSegmentsBatch(
         service: ScheduleBetweenStationsServiceProtocol,
         calendar: Calendar,
         startDate: Date,
-        dayRange: Range<Int>
+        dayRange: Range<Int>,
+        includeTransfers: Bool
     ) async throws -> [Components.Schemas.Segment] {
-        try await withThrowingTaskGroup(of: [Components.Schemas.Segment].self) { group in
-            for dayOffset in dayRange {
-                guard let date = calendar.date(byAdding: .day, value: dayOffset, to: startDate) else {
-                    continue
-                }
+        var batchSegments: [Components.Schemas.Segment] = []
 
-                let dateString = Self.dateString(from: date)
-
-                group.addTask {
-                    try await self.fetchSegments(for: dateString, service: service)
-                }
+        for dayOffset in dayRange {
+            guard let date = calendar.date(byAdding: .day, value: dayOffset, to: startDate) else {
+                continue
             }
 
-            var batchSegments: [Components.Schemas.Segment] = []
-            for try await daySegments in group {
-                batchSegments.append(contentsOf: daySegments)
-            }
-            return batchSegments
+            let dateString = Self.dateString(from: date)
+            let daySegments = try await fetchSegments(
+                for: dateString,
+                service: service,
+                includeTransfers: includeTransfers
+            )
+            batchSegments.append(contentsOf: daySegments)
         }
+
+        return batchSegments
     }
 
     private func fetchSegments(
         for date: String,
-        service: ScheduleBetweenStationsServiceProtocol
+        service: ScheduleBetweenStationsServiceProtocol,
+        includeTransfers: Bool
     ) async throws -> [Components.Schemas.Segment] {
         var allSegments: [Components.Schemas.Segment] = []
         var offset = 0
@@ -116,7 +272,9 @@ final class ScheduleResultViewModel {
                 to: toStation.id,
                 date: date,
                 offset: offset,
-                limit: pageSize
+                limit: pageSize,
+                transfers: includeTransfers,
+                resultTimeZone: ScheduleDateFormatting.resultTimeZoneIdentifier
             )
 
             let segments = response.segments ?? []
@@ -135,54 +293,69 @@ final class ScheduleResultViewModel {
 
     private static func dateString(from date: Date) -> String {
         let formatter = DateFormatter()
+        formatter.calendar = ScheduleDateFormatting.calendar
+        formatter.timeZone = ScheduleDateFormatting.timeZone
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: date)
     }
 
     private static var startOfToday: Date {
-        Calendar.current.startOfDay(for: Date())
+        ScheduleDateFormatting.calendar.startOfDay(for: Date())
     }
 
     private static func extractScheduleItems(from segments: [Components.Schemas.Segment]) -> [ScheduleItem] {
         segments
-            .filter { ($0.departure ?? .distantPast) >= startOfToday }
-            .sorted { ($0.departure ?? .distantPast) < ($1.departure ?? .distantPast) }
             .compactMap(makeScheduleItem(from:))
+            .filter { $0.departure >= startOfToday }
+            .sorted { $0.departure < $1.departure }
     }
 
     private static func makeScheduleItem(from segment: Components.Schemas.Segment) -> ScheduleItem? {
         guard
             let departureDateValue = segment.departure,
             let arrivalDateValue = segment.arrival,
-            let carrierTitle = segment.thread?.carrier?.title
+            let carrierTitle = carrierTitle(from: segment)
         else { return nil }
 
-        let durationSeconds = segment.duration ?? Int(arrivalDateValue.timeIntervalSince(departureDateValue))
-        let id = "\(segment.thread?.uid ?? carrierTitle)-\(departureDateValue.timeIntervalSince1970)"
+        let durationSeconds = Int(segment.duration ?? arrivalDateValue.timeIntervalSince(departureDateValue))
+        let threadUID = segment.thread?.uid ?? segment.details?.compactMap(\.thread?.uid).first
+        let id = "\(threadUID ?? carrierTitle)-\(departureDateValue.timeIntervalSince1970)"
 
         return ScheduleItem(
             id: id,
             carrierTitle: carrierTitle,
-            logoURL: segment.thread?.carrier?.logo,
-            departureDate: formatDate(departureDateValue),
-            departureTime: formatTime(departureDateValue),
-            arrivalTime: formatTime(arrivalDateValue),
+            logoURL: carrierLogo(from: segment),
+            transferCity: transferCity(from: segment),
+            departure: departureDateValue,
+            departureDate: ScheduleDateFormatting.formatDate(departureDateValue),
+            departureTime: ScheduleDateFormatting.formatTime(departureDateValue),
+            arrivalTime: ScheduleDateFormatting.formatTime(arrivalDateValue),
             durationText: formatDuration(seconds: durationSeconds)
         )
     }
 
-    private static func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ru_RU")
-        formatter.dateFormat = "d MMMM"
-        return formatter.string(from: date)
+    private static func carrierTitle(from segment: Components.Schemas.Segment) -> String? {
+        if let title = segment.thread?.carrier?.title {
+            return title
+        }
+
+        return segment.details?.compactMap(\.thread?.carrier?.title).first
     }
 
-    private static func formatTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ru_RU")
-        formatter.dateFormat = "HH:mm"
-        return formatter.string(from: date)
+    private static func carrierLogo(from segment: Components.Schemas.Segment) -> String? {
+        if let logo = segment.thread?.carrier?.logo {
+            return logo
+        }
+
+        return segment.details?.compactMap(\.thread?.carrier?.logo).first
+    }
+
+    private static func transferCity(from segment: Components.Schemas.Segment) -> String? {
+        guard segment.has_transfers == true else { return nil }
+
+        guard let transfer = segment.transfers?.first else { return nil }
+
+        return transfer.title ?? transfer.popular_title ?? transfer.short_title
     }
 
     private static func formatDuration(seconds: Int) -> String {
@@ -215,5 +388,18 @@ final class ScheduleResultViewModel {
         default:
             return many
         }
+    }
+}
+
+private struct ScheduleCache {
+    var items: [ScheduleItem] = []
+    var nextDayOffset = 0
+    var hasMoreDays = true
+    var hasInitialLoad = false
+
+    func withInitialLoadCompleted() -> ScheduleCache {
+        var cache = self
+        cache.hasInitialLoad = true
+        return cache
     }
 }

@@ -62,7 +62,7 @@ struct StationSelectionView: View {
             .padding(.vertical, 13)
             .background {
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(.lightGray)
+                    .fill(.lightGraySearch)
             }
             .padding(.horizontal, 16)
 

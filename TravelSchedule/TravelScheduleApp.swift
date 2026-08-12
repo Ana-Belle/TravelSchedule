@@ -9,9 +9,19 @@ import SwiftUI
 
 @main
 struct TravelScheduleApp: App {
+    private let isAPIAvailable: Bool
+
+    init() {
+        isAPIAvailable = APIServices.bootstrap()
+    }
+
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            if isAPIAvailable {
+                MainTabView()
+            } else {
+                ErrorStateView(kind: .serverError)
+            }
         }
     }
 }

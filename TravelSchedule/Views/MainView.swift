@@ -1,5 +1,5 @@
 //
-//  ScheduleView.swift
+//  MainView.swift
 //  TravelSchedule
 //
 //  Created by Anastasia Belyakova on 03.08.2026.
@@ -11,7 +11,7 @@ private enum ScheduleDestination: Hashable {
     case citySelection(StationField)
 }
 
-struct ScheduleView: View {
+struct MainView: View {
     @State private var navigationPath = NavigationPath()
     @State private var fromStation: Station?
     @State private var toStation: Station?
@@ -145,13 +145,13 @@ struct ScheduleView: View {
     private func stationTitleColor(for field: StationField) -> Color {
         switch field {
         case .from:
-            fromStation == nil ? .grayUniversal : .blackDayNight
+            fromStation == nil ? .grayUniversal : .blackUniversal
         case .to:
-            toStation == nil ? .grayUniversal : .blackDayNight
+            toStation == nil ? .grayUniversal : .blackUniversal
         }
     }
 }
 
 #Preview {
-    ScheduleView()
+    MainView()
 }

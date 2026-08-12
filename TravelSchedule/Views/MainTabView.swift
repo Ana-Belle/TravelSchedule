@@ -27,7 +27,7 @@ struct MainTabView: View {
     
     var body: some View {
         TabView {
-            ScheduleView()
+            MainView()
                 .tabItem {
                     Image("Schedule")
                         .renderingMode(.template)
@@ -44,5 +44,15 @@ struct MainTabView: View {
 }
 
 #Preview {
-    MainTabView()
+    MainTabViewPreview()
+}
+
+private struct MainTabViewPreview: View {
+    init() {
+        _ = APIServices.bootstrap()
+    }
+
+    var body: some View {
+        MainTabView()
+    }
 }

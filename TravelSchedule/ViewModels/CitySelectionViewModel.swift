@@ -7,7 +7,6 @@
 
 import Foundation
 import OpenAPIRuntime
-import OpenAPIURLSession
 
 @MainActor
 @Observable
@@ -15,6 +14,12 @@ final class CitySelectionViewModel {
     var cities: [City] = []
     var isLoading = false
     var errorState: AppErrorState?
+
+    private let allStationsService: AllStationsServiceProtocol
+
+    init(allStationsService: AllStationsServiceProtocol = APIServices.shared.allStations) {
+        self.allStationsService = allStationsService
+    }
 
     func filteredCities(searchText: String) -> [City] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -32,12 +37,7 @@ final class CitySelectionViewModel {
         defer { isLoading = false }
 
         do {
-            let client = Client(
-                serverURL: try Servers.Server1.url(),
-                transport: URLSessionTransport()
-            )
-            let service = AllStationsService(client: client, apikey: Constants.apiKey)
-            let response = try await service.getAllStations()
+            let response = try await allStationsService.getAllStations()
             cities = Self.extractCities(from: response)
         } catch {
             errorState = AppErrorState(error: error)

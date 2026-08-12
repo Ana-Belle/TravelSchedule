@@ -21,6 +21,8 @@ struct ScheduleResultView: View {
     }
 
     var body: some View {
+        @Bindable var viewModel = viewModel
+
         Group {
             if let errorState = viewModel.errorState {
                 ErrorStateView(kind: errorState)
@@ -42,13 +44,20 @@ struct ScheduleResultView: View {
                 }
             }
         }
+        .navigationDestination(isPresented: $viewModel.isFilterPresented) {
+            ScheduleFilterView(filters: $viewModel.filters) { appliedFilters in
+                viewModel.applyFilters(appliedFilters)
+            }
+        }
         .task {
             await viewModel.loadSchedule()
         }
     }
 
     private var scheduleContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        @Bindable var viewModel = viewModel
+
+        return VStack(alignment: .leading, spacing: 16) {
             Text(viewModel.routeTitle)
                 .foregroundStyle(.blackDayNight)
                 .font(.system(size: 24, weight: .bold))
@@ -59,67 +68,145 @@ struct ScheduleResultView: View {
                 if viewModel.isLoading {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if viewModel.scheduleItems.isEmpty {
+                } else if viewModel.scheduleItems.isEmpty && !viewModel.hasLoadedSchedule {
                     Text("Вариантов нет")
                         .foregroundStyle(.blackDayNight)
                         .font(.system(size: 24, weight: .bold))
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    List(viewModel.scheduleItems) { item in
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack(alignment: .top, spacing: 12) {
-                                CarrierLogoView(logoURL: item.logoURL)
+                    ZStack(alignment: .bottom) {
+                        Group {
+                            if viewModel.scheduleItems.isEmpty {
+                                Text("Вариантов нет")
+                                    .foregroundStyle(.blackDayNight)
+                                    .font(.system(size: 24, weight: .bold))
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            } else {
+                                List {
+                                    ForEach(viewModel.scheduleItems) { item in
+                                        scheduleItemRow(item)
+                                            .onAppear {
+                                                guard item.id == viewModel.scheduleItems.last?.id else { return }
+                                                Task {
+                                                    await viewModel.loadMoreIfNeeded()
+                                                }
+                                            }
+                                    }
 
-                                HStack(alignment: .top, spacing: 8) {
-                                    Text(item.carrierTitle)
-                                        .foregroundStyle(.blackUniversal)
-                                        .font(.system(size: 17, weight: .regular))
-
-                                    Spacer(minLength: 8)
-
-                                    Text(item.departureDate)
-                                        .foregroundStyle(.blackUniversal)
-                                        .font(.system(size: 12, weight: .regular))
+                                    if viewModel.isLoadingMore {
+                                        HStack {
+                                            Spacer()
+                                            ProgressView()
+                                            Spacer()
+                                        }
+                                        .listRowBackground(Color.whiteDayNight)
+                                        .listRowSeparator(.hidden)
+                                    }
                                 }
-                                .frame(maxWidth: .infinity, minHeight: 38, alignment: .center)
+                                .listStyle(.plain)
+                                .scrollContentBackground(.hidden)
+                                .contentMargins(.bottom, 118, for: .scrollContent)
                             }
-
-                            HStack(spacing: 8) {
-                                Text(item.departureTime)
-                                    .foregroundStyle(.blackUniversal)
-                                    .font(.system(size: 17, weight: .regular))
-
-                                scheduleConnectorLine
-
-                                Text(item.durationText)
-                                    .foregroundStyle(.blackUniversal)
-                                    .font(.system(size: 12, weight: .regular))
-                                    .fixedSize()
-
-                                scheduleConnectorLine
-
-                                Text(item.arrivalTime)
-                                    .foregroundStyle(.blackUniversal)
-                                    .font(.system(size: 17, weight: .regular))
-                            }
-                            .frame(maxWidth: .infinity)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .background {
-                            RoundedRectangle(cornerRadius: 24)
-                                .fill(.lightGray)
-                        }
-                        .listRowBackground(Color.whiteDayNight)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color.whiteDayNight)
+
+                        filterButton
                     }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+    }
+
+    private var filterButton: some View {
+        Button {
+            viewModel.isFilterPresented = true
+        } label: {
+            HStack(spacing: 8) {
+                Text("Уточнить время")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(.whiteUniversal)
+
+                if viewModel.filters.hasActiveFilters {
+                    Circle()
+                        .fill(.redUniversal)
+                        .frame(width: 8, height: 8)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 60)
+            .background(.blueUniversal, in: RoundedRectangle(cornerRadius: 16))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 24)
+    }
+
+    private func scheduleItemRow(_ item: ScheduleItem) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                CarrierLogoView(logoURL: item.logoURL)
+
+                HStack(alignment: .top, spacing: 8) {
+                    Group {
+                        if let transferCity = item.transferCity {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(item.carrierTitle)
+                                    .foregroundStyle(.blackUniversal)
+                                    .font(.system(size: 17, weight: .regular))
+
+                                Text("С пересадкой в \(transferCity)")
+                                    .foregroundStyle(.redUniversal)
+                                    .font(.system(size: 12, weight: .regular))
+                            }
+                        } else {
+                            Text(item.carrierTitle)
+                                .foregroundStyle(.blackUniversal)
+                                .font(.system(size: 17, weight: .regular))
+                                .frame(height: 38, alignment: .center)
+                        }
+                    }
+
+                    Spacer(minLength: 8)
+
+                    Text(item.departureDate)
+                        .foregroundStyle(.blackUniversal)
+                        .font(.system(size: 12, weight: .regular))
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
+
+            HStack(spacing: 8) {
+                Text(item.departureTime)
+                    .foregroundStyle(.blackUniversal)
+                    .font(.system(size: 17, weight: .regular))
+
+                scheduleConnectorLine
+
+                Text(item.durationText)
+                    .foregroundStyle(.blackUniversal)
+                    .font(.system(size: 12, weight: .regular))
+                    .fixedSize()
+
+                scheduleConnectorLine
+
+                Text(item.arrivalTime)
+                    .foregroundStyle(.blackUniversal)
+                    .font(.system(size: 17, weight: .regular))
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background {
+            RoundedRectangle(cornerRadius: 24)
+                .fill(.lightGray)
+        }
+        .listRowBackground(Color.whiteDayNight)
+        .listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
     }
 }
 
@@ -155,6 +242,10 @@ private struct CarrierLogoView: View {
             }
         }
         .frame(width: 38, height: 38)
+        .background {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.whiteUniversal)
+        }
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
@@ -165,10 +256,20 @@ private struct CarrierLogoView: View {
 }
 
 #Preview {
-    NavigationStack {
-        ScheduleResultView(
-            fromStation: Station(id: "s9600213", title: "Москва"),
-            toStation: Station(id: "s9600366", title: "Санкт-Петербург")
-        )
+    ScheduleResultViewPreview()
+}
+
+private struct ScheduleResultViewPreview: View {
+    init() {
+        _ = APIServices.bootstrap()
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScheduleResultView(
+                fromStation: Station(id: "s9600213", title: "Москва"),
+                toStation: Station(id: "s9600366", title: "Санкт-Петербург")
+            )
+        }
     }
 }
