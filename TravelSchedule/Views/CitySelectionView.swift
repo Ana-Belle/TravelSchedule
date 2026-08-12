@@ -12,19 +12,19 @@ struct CitySelectionView: View {
     @Binding var fromStation: Station?
     @Binding var toStation: Station?
     @Binding var navigationPath: NavigationPath
-
+    
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
     @State private var viewModel = CitySelectionViewModel()
-
+    
     private var filteredCities: [City] {
         viewModel.filteredCities(searchText: searchText)
     }
-
+    
     private var isSearchActive: Bool {
         !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
-
+    
     var body: some View {
         Group {
             if let errorState = viewModel.errorState {
@@ -44,7 +44,7 @@ struct CitySelectionView: View {
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(.blackDayNight)
             }
-
+            
             ToolbarItem(placement: .topBarLeading) {
                 Button {
                     dismiss()
@@ -57,13 +57,13 @@ struct CitySelectionView: View {
             await viewModel.loadCities()
         }
     }
-
+    
     private var citySelectionContent: some View {
         VStack(spacing: 16) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.grayUniversal)
-
+                
                 TextField(
                     "",
                     text: $searchText,
@@ -82,7 +82,7 @@ struct CitySelectionView: View {
                     .fill(.lightGraySearch)
             }
             .padding(.horizontal, 16)
-
+            
             Group {
                 if viewModel.isLoading {
                     ProgressView()
@@ -121,11 +121,11 @@ private struct CitySelectionViewPreview: View {
     @State private var fromStation: Station?
     @State private var toStation: Station?
     @State private var navigationPath = NavigationPath()
-
+    
     init() {
         _ = APIServices.bootstrap()
     }
-
+    
     var body: some View {
         NavigationStack {
             CitySelectionView(

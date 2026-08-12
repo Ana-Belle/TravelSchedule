@@ -15,7 +15,7 @@ struct MainView: View {
     @State private var navigationPath = NavigationPath()
     @State private var fromStation: Station?
     @State private var toStation: Station?
-
+    
     var body: some View {
         NavigationStack(path: $navigationPath) {
             scheduleContent
@@ -47,14 +47,14 @@ struct MainView: View {
                 }
         }
     }
-
+    
     private var areStationsSelected: Bool {
         fromStation != nil && toStation != nil
     }
-
+    
     private var scheduleContent: some View {
         GeometryReader { _ in
-
+            
             Color.whiteDayNight
                 .overlay(alignment: .top) {
                     VStack(spacing: 16) {
@@ -94,7 +94,7 @@ struct MainView: View {
                                                 .fill(.whiteUniversal)
                                         }
                                     }
-
+                                    
                                     Section {
                                         Button {
                                             swap(&fromStation, &toStation)
@@ -113,7 +113,7 @@ struct MainView: View {
                                 .padding(.bottom, 16)
                             }
                             .frame(height: 128)
-
+                        
                         if areStationsSelected {
                             Button {
                                 if let fromStation, let toStation {
@@ -141,7 +141,7 @@ struct MainView: View {
         }
         .ignoresSafeArea()
     }
-
+    
     private func stationTitleColor(for field: StationField) -> Color {
         switch field {
         case .from:

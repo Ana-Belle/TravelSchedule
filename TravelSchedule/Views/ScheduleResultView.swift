@@ -10,8 +10,7 @@ import SwiftUI
 struct ScheduleResultView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: ScheduleResultViewModel
-    @State private var isCarrierInfoPresented = false
-
+    
     init(fromStation: Station, toStation: Station) {
         _viewModel = State(
             initialValue: ScheduleResultViewModel(
@@ -20,10 +19,10 @@ struct ScheduleResultView: View {
             )
         )
     }
-
+    
     var body: some View {
         @Bindable var viewModel = viewModel
-
+        
         Group {
             if let errorState = viewModel.errorState {
                 ErrorStateView(kind: errorState)
@@ -45,81 +44,77 @@ struct ScheduleResultView: View {
                 }
             }
         }
-        .navigationDestination(isPresented: $viewModel.isFilterPresented) {
-            ScheduleFilterView(filters: $viewModel.filters) { appliedFilters in
-                viewModel.applyFilters(appliedFilters)
+        .navigationDestination(for: ScheduleResultDestination.self) { destination in
+            switch destination {
+            case .filter:
+                ScheduleFilterView(filters: $viewModel.filters) { appliedFilters in
+                    viewModel.applyFilters(appliedFilters)
+                }
+            case .carrierInfo:
+                CarrierInfoView()
             }
-        }
-        .navigationDestination(isPresented: $isCarrierInfoPresented) {
-            CarrierInfoView()
         }
         .task {
             await viewModel.loadSchedule()
         }
     }
-
+    
     private var scheduleContent: some View {
         @Bindable var viewModel = viewModel
-
+        
         return VStack(alignment: .leading, spacing: 16) {
             Text(viewModel.routeTitle)
                 .foregroundStyle(.blackDayNight)
                 .font(.system(size: 24, weight: .bold))
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
-
+            
             Group {
-                if viewModel.isLoading {
+                if viewModel.isLoading || !viewModel.hasCompletedInitialLoad {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if viewModel.scheduleItems.isEmpty && !viewModel.hasLoadedSchedule {
-                    Text("Вариантов нет")
-                        .foregroundStyle(.blackDayNight)
-                        .font(.system(size: 24, weight: .bold))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if viewModel.scheduleItems.isEmpty {
+                    ZStack(alignment: .bottom) {
+                        emptyScheduleMessage
+                        
+                        if viewModel.hasLoadedSchedule {
+                            filterButton
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.whiteDayNight)
                 } else {
                     ZStack(alignment: .bottom) {
-                        Group {
-                            if viewModel.scheduleItems.isEmpty {
-                                Text("Вариантов нет")
-                                    .foregroundStyle(.blackDayNight)
-                                    .font(.system(size: 24, weight: .bold))
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            } else {
-                                List {
-                                    ForEach(viewModel.scheduleItems) { item in
-                                        Button {
-                                            isCarrierInfoPresented = true
-                                        } label: {
-                                            scheduleItemRow(item)
-                                        }
-                                        .buttonStyle(.plain)
-                                        .onAppear {
-                                                guard item.id == viewModel.scheduleItems.last?.id else { return }
-                                                Task {
-                                                    await viewModel.loadMoreIfNeeded()
-                                                }
-                                            }
-                                    }
-
-                                    if viewModel.isLoadingMore {
-                                        HStack {
-                                            Spacer()
-                                            ProgressView()
-                                            Spacer()
-                                        }
-                                        .listRowBackground(Color.whiteDayNight)
-                                        .listRowSeparator(.hidden)
+                        List {
+                            ForEach(viewModel.scheduleItems) { item in
+                                NavigationLink(value: ScheduleResultDestination.carrierInfo) {
+                                    scheduleItemRow(item)
+                                }
+                                .buttonStyle(.plain)
+                                .onAppear {
+                                    guard item.id == viewModel.scheduleItems.last?.id else { return }
+                                    Task {
+                                        await viewModel.loadMoreIfNeeded()
                                     }
                                 }
-                                .listStyle(.plain)
-                                .scrollContentBackground(.hidden)
-                                .contentMargins(.bottom, 118, for: .scrollContent)
+                            }
+                            
+                            if viewModel.isLoadingMore {
+                                HStack {
+                                    Spacer()
+                                    ProgressView()
+                                    Spacer()
+                                }
+                                .listRowBackground(Color.whiteDayNight)
+                                .listRowSeparator(.hidden)
                             }
                         }
+                        .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
+                        .contentMargins(.bottom, 118, for: .scrollContent)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(Color.whiteDayNight)
-
+                        
                         filterButton
                     }
                 }
@@ -127,16 +122,21 @@ struct ScheduleResultView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
-
+    
+    private var emptyScheduleMessage: some View {
+        Text("Вариантов нет")
+            .foregroundStyle(.blackDayNight)
+            .font(.system(size: 24, weight: .bold))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
     private var filterButton: some View {
-        Button {
-            viewModel.isFilterPresented = true
-        } label: {
+        NavigationLink(value: ScheduleResultDestination.filter) {
             HStack(spacing: 8) {
                 Text("Уточнить время")
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(.whiteUniversal)
-
+                
                 if viewModel.filters.hasActiveFilters {
                     Circle()
                         .fill(.redUniversal)
@@ -151,12 +151,12 @@ struct ScheduleResultView: View {
         .padding(.horizontal, 16)
         .padding(.bottom, 24)
     }
-
+    
     private func scheduleItemRow(_ item: ScheduleItem) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 12) {
                 CarrierLogoView(logoURL: item.logoURL)
-
+                
                 HStack(alignment: .top, spacing: 8) {
                     Group {
                         if let transferCity = item.transferCity {
@@ -164,7 +164,7 @@ struct ScheduleResultView: View {
                                 Text(item.carrierTitle)
                                     .foregroundStyle(.blackUniversal)
                                     .font(.system(size: 17, weight: .regular))
-
+                                
                                 Text("С пересадкой в \(transferCity)")
                                     .foregroundStyle(.redUniversal)
                                     .font(.system(size: 12, weight: .regular))
@@ -176,30 +176,30 @@ struct ScheduleResultView: View {
                                 .frame(height: 38, alignment: .center)
                         }
                     }
-
+                    
                     Spacer(minLength: 8)
-
+                    
                     Text(item.departureDate)
                         .foregroundStyle(.blackUniversal)
                         .font(.system(size: 12, weight: .regular))
                 }
                 .frame(maxWidth: .infinity, alignment: .topLeading)
             }
-
+            
             HStack(spacing: 8) {
                 Text(item.departureTime)
                     .foregroundStyle(.blackUniversal)
                     .font(.system(size: 17, weight: .regular))
-
+                
                 scheduleConnectorLine
-
+                
                 Text(item.durationText)
                     .foregroundStyle(.blackUniversal)
                     .font(.system(size: 12, weight: .regular))
                     .fixedSize()
-
+                
                 scheduleConnectorLine
-
+                
                 Text(item.arrivalTime)
                     .foregroundStyle(.blackUniversal)
                     .font(.system(size: 17, weight: .regular))
@@ -228,7 +228,7 @@ private var scheduleConnectorLine: some View {
 
 private struct CarrierLogoView: View {
     let logoURL: String?
-
+    
     var body: some View {
         Group {
             if let logoURL, let url = URL(string: logoURL) {
@@ -257,7 +257,7 @@ private struct CarrierLogoView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
-
+    
     private var logoPlaceholder: some View {
         Image(systemName: "tram.fill")
             .foregroundStyle(.grayUniversal)
@@ -272,7 +272,7 @@ private struct ScheduleResultViewPreview: View {
     init() {
         _ = APIServices.bootstrap()
     }
-
+    
     var body: some View {
         NavigationStack {
             ScheduleResultView(

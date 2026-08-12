@@ -10,7 +10,7 @@ import Foundation
 enum StationField: Hashable {
     case from
     case to
-
+    
     var placeholder: String {
         switch self {
         case .from:

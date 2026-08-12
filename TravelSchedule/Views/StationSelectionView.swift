@@ -13,11 +13,11 @@ struct StationSelectionView: View {
     @Binding var fromStation: Station?
     @Binding var toStation: Station?
     @Binding var navigationPath: NavigationPath
-
+    
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
     @State private var viewModel: StationSelectionViewModel
-
+    
     init(
         city: City,
         field: StationField,
@@ -32,21 +32,21 @@ struct StationSelectionView: View {
         _navigationPath = navigationPath
         _viewModel = State(initialValue: StationSelectionViewModel(city: city))
     }
-
+    
     private var filteredStations: [Station] {
         viewModel.filteredStations(searchText: searchText)
     }
-
+    
     private var isSearchActive: Bool {
         !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
-
+    
     var body: some View {
         VStack(spacing: 16) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.grayUniversal)
-
+                
                 TextField(
                     "",
                     text: $searchText,
@@ -65,7 +65,7 @@ struct StationSelectionView: View {
                     .fill(.lightGraySearch)
             }
             .padding(.horizontal, 16)
-
+            
             if filteredStations.isEmpty && isSearchActive {
                 Text("Станция не найдена")
                     .foregroundStyle(.blackDayNight)
@@ -107,7 +107,7 @@ struct StationSelectionView: View {
             }
         }
     }
-
+    
     private func selectStation(_ station: Station) {
         switch field {
         case .from:
@@ -115,7 +115,7 @@ struct StationSelectionView: View {
         case .to:
             toStation = station
         }
-
+        
         navigationPath = NavigationPath()
     }
 }
@@ -124,7 +124,7 @@ struct StationSelectionView: View {
     @Previewable @State var fromStation: Station?
     @Previewable @State var toStation: Station?
     @Previewable @State var navigationPath = NavigationPath()
-
+    
     NavigationStack {
         StationSelectionView(
             city: City(

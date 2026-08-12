@@ -10,7 +10,7 @@ import Foundation
 enum AppErrorState: Equatable {
     case noInternet
     case serverError
-
+    
     var imageName: String {
         switch self {
         case .noInternet:
@@ -19,7 +19,7 @@ enum AppErrorState: Equatable {
             "Server Error"
         }
     }
-
+    
     var title: String {
         switch self {
         case .noInternet:
@@ -28,7 +28,7 @@ enum AppErrorState: Equatable {
             "Ошибка сервера"
         }
     }
-
+    
     init(error: Error) {
         if error.isNoInternetError {
             self = .noInternet
@@ -41,7 +41,7 @@ enum AppErrorState: Equatable {
 private extension Error {
     var isNoInternetError: Bool {
         var currentError: Error? = self
-
+        
         while let error = currentError {
             if let urlError = error as? URLError {
                 switch urlError.code {
@@ -51,10 +51,10 @@ private extension Error {
                     break
                 }
             }
-
+            
             currentError = (error as NSError).userInfo[NSUnderlyingErrorKey] as? Error
         }
-
+        
         return false
     }
 }

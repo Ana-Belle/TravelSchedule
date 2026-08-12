@@ -15,7 +15,7 @@ enum TransfersFilter: Hashable {
 struct ScheduleFilters: Hashable {
     var selectedPeriods: Set<DepartureTimePeriod> = []
     var transfers: TransfersFilter? = nil
-
+    
     var hasActiveFilters: Bool {
         !selectedPeriods.isEmpty || transfers != nil
     }

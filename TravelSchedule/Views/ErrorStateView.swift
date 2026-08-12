@@ -9,11 +9,11 @@ import SwiftUI
 
 struct ErrorStateView: View {
     let kind: AppErrorState
-
+    
     var body: some View {
         VStack(spacing: 16) {
             Image(kind.imageName)
-
+            
             Text(kind.title)
                 .foregroundStyle(.blackDayNight)
                 .font(.system(size: 24, weight: .bold))

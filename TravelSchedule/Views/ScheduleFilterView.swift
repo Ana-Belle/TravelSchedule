@@ -10,17 +10,17 @@ import SwiftUI
 struct ScheduleFilterView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var filters: ScheduleFilters
-
+    
     @State private var draftFilters: ScheduleFilters
-
+    
     let onApply: (ScheduleFilters) -> Void
-
+    
     init(filters: Binding<ScheduleFilters>, onApply: @escaping (ScheduleFilters) -> Void) {
         _filters = filters
         _draftFilters = State(initialValue: filters.wrappedValue)
         self.onApply = onApply
     }
-
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             ScrollView {
@@ -30,18 +30,18 @@ struct ScheduleFilterView: View {
                             .foregroundStyle(.blackDayNight)
                             .font(.system(size: 24, weight: .bold))
                             .padding(.bottom, 16)
-
+                        
                         ForEach(DepartureTimePeriod.allCases) { period in
                             timePeriodRow(period)
                         }
                     }
-
+                    
                     VStack(alignment: .leading, spacing: 0) {
                         Text("Показывать варианты с пересадками")
                             .foregroundStyle(.blackDayNight)
                             .font(.system(size: 24, weight: .bold))
                             .padding(.bottom, 16)
-
+                        
                         transfersRow(title: "Да", value: .yes)
                         transfersRow(title: "Нет", value: .no)
                     }
@@ -52,15 +52,25 @@ struct ScheduleFilterView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(Color.whiteDayNight)
-
+            
             if draftFilters.hasActiveFilters {
                 applyButton
             }
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.backward")
+                }
+            }
+        }
     }
-
+    
     private var applyButton: some View {
         Button {
             filters = draftFilters
@@ -78,7 +88,7 @@ struct ScheduleFilterView: View {
         .padding(.horizontal, 16)
         .padding(.bottom, 24)
     }
-
+    
     private func timePeriodRow(_ period: DepartureTimePeriod) -> some View {
         Button {
             togglePeriod(period)
@@ -87,9 +97,9 @@ struct ScheduleFilterView: View {
                 Text("\(period.title) \(period.timeRange)")
                     .foregroundStyle(.blackDayNight)
                     .font(.system(size: 17, weight: .regular))
-
+                
                 Spacer()
-
+                
                 SquareCheckbox(isSelected: draftFilters.selectedPeriods.contains(period))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -98,7 +108,7 @@ struct ScheduleFilterView: View {
         }
         .buttonStyle(.plain)
     }
-
+    
     private func transfersRow(title: String, value: TransfersFilter) -> some View {
         Button {
             draftFilters.transfers = value
@@ -107,9 +117,9 @@ struct ScheduleFilterView: View {
                 Text(title)
                     .foregroundStyle(.blackDayNight)
                     .font(.system(size: 17, weight: .regular))
-
+                
                 Spacer()
-
+                
                 RadioButton(isSelected: draftFilters.transfers == value)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -118,7 +128,7 @@ struct ScheduleFilterView: View {
         }
         .buttonStyle(.plain)
     }
-
+    
     private func togglePeriod(_ period: DepartureTimePeriod) {
         if draftFilters.selectedPeriods.contains(period) {
             draftFilters.selectedPeriods.remove(period)
@@ -130,13 +140,13 @@ struct ScheduleFilterView: View {
 
 private struct SquareCheckbox: View {
     let isSelected: Bool
-
+    
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 4)
                 .stroke(.blackDayNight, lineWidth: 1.5)
                 .frame(width: 22, height: 22)
-
+            
             if isSelected {
                 Image(systemName: "checkmark")
                     .font(.system(size: 14, weight: .bold))
@@ -148,13 +158,13 @@ private struct SquareCheckbox: View {
 
 private struct RadioButton: View {
     let isSelected: Bool
-
+    
     var body: some View {
         ZStack {
             Circle()
                 .stroke(.blackDayNight, lineWidth: 1.5)
                 .frame(width: 22, height: 22)
-
+            
             if isSelected {
                 Circle()
                     .fill(.blackDayNight)
@@ -166,7 +176,7 @@ private struct RadioButton: View {
 
 #Preview {
     @Previewable @State var filters = ScheduleFilters()
-
+    
     NavigationStack {
         ScheduleFilterView(filters: $filters) { _ in }
     }

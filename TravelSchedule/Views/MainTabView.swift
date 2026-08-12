@@ -51,7 +51,7 @@ private struct MainTabViewPreview: View {
     init() {
         _ = APIServices.bootstrap()
     }
-
+    
     var body: some View {
         MainTabView()
     }

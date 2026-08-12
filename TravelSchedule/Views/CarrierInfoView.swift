@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CarrierInfoView: View {
     @Environment(\.dismiss) private var dismiss
-
+    
     var body: some View {
         Color.whiteDayNight
             .ignoresSafeArea()
@@ -22,7 +22,7 @@ struct CarrierInfoView: View {
                         .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(.blackDayNight)
                 }
-
+                
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
                         dismiss()

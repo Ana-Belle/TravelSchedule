@@ -14,28 +14,28 @@ final class CitySelectionViewModel {
     var cities: [City] = []
     var isLoading = false
     var errorState: AppErrorState?
-
+    
     private let allStationsService: AllStationsServiceProtocol
-
+    
     init(allStationsService: AllStationsServiceProtocol = APIServices.shared.allStations) {
         self.allStationsService = allStationsService
     }
-
+    
     func filteredCities(searchText: String) -> [City] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return cities }
-
+        
         return cities.filter {
             $0.title.localizedCaseInsensitiveContains(query)
         }
     }
-
+    
     func loadCities() async {
         isLoading = true
         errorState = nil
-
+        
         defer { isLoading = false }
-
+        
         do {
             let response = try await allStationsService.getAllStations()
             cities = Self.extractCities(from: response)
@@ -43,11 +43,11 @@ final class CitySelectionViewModel {
             errorState = AppErrorState(error: error)
         }
     }
-
+    
     private static func extractCities(from response: AllStations) -> [City] {
         var cities: [City] = []
         var seenCodes = Set<String>()
-
+        
         for country in response.countries ?? [] {
             for region in country.regions ?? [] {
                 for settlement in region.settlements ?? [] {
@@ -56,7 +56,7 @@ final class CitySelectionViewModel {
                         let code = settlement.codes?.yandex_code,
                         !seenCodes.contains(code)
                     else { continue }
-
+                    
                     seenCodes.insert(code)
                     cities.append(
                         City(
@@ -68,30 +68,30 @@ final class CitySelectionViewModel {
                 }
             }
         }
-
+        
         return cities.sorted {
             $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
         }
     }
-
+    
     private static func extractStations(from settlement: Components.Schemas.Settlement) -> [Station] {
         var stations: [Station] = []
         var seenCodes = Set<String>()
-
+        
         for station in settlement.stations ?? [] {
             let code = station.codes?.yandex_code ?? station.code
             guard
                 let code,
                 !seenCodes.contains(code)
             else { continue }
-
+            
             let title = station.title ?? station.popular_title ?? station.short_title
             guard let title else { continue }
-
+            
             seenCodes.insert(code)
             stations.append(Station(id: code, title: title))
         }
-
+        
         return stations.sorted {
             $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
         }
