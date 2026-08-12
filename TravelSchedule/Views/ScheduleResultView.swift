@@ -10,6 +10,7 @@ import SwiftUI
 struct ScheduleResultView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: ScheduleResultViewModel
+    @State private var isCarrierInfoPresented = false
 
     init(fromStation: Station, toStation: Station) {
         _viewModel = State(
@@ -49,6 +50,9 @@ struct ScheduleResultView: View {
                 viewModel.applyFilters(appliedFilters)
             }
         }
+        .navigationDestination(isPresented: $isCarrierInfoPresented) {
+            CarrierInfoView()
+        }
         .task {
             await viewModel.loadSchedule()
         }
@@ -84,8 +88,13 @@ struct ScheduleResultView: View {
                             } else {
                                 List {
                                     ForEach(viewModel.scheduleItems) { item in
-                                        scheduleItemRow(item)
-                                            .onAppear {
+                                        Button {
+                                            isCarrierInfoPresented = true
+                                        } label: {
+                                            scheduleItemRow(item)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .onAppear {
                                                 guard item.id == viewModel.scheduleItems.last?.id else { return }
                                                 Task {
                                                     await viewModel.loadMoreIfNeeded()
