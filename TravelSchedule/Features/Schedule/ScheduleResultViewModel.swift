@@ -323,6 +323,7 @@ final class ScheduleResultViewModel {
         return ScheduleItem(
             id: id,
             carrierTitle: carrierTitle,
+            carrierCode: carrierCode(from: segment),
             logoURL: carrierLogo(from: segment),
             transferCity: transferCity(from: segment),
             departure: departureDateValue,
@@ -345,10 +346,18 @@ final class ScheduleResultViewModel {
         if let logo = segment.thread?.carrier?.logo {
             return logo
         }
-        
+
         return segment.details?.compactMap(\.thread?.carrier?.logo).first
     }
-    
+
+    private static func carrierCode(from segment: Components.Schemas.Segment) -> String? {
+        if let code = segment.thread?.carrier?.code {
+            return String(code)
+        }
+
+        return segment.details?.compactMap(\.thread?.carrier?.code).first.map(String.init)
+    }
+
     private static func transferCity(from segment: Components.Schemas.Segment) -> String? {
         guard segment.has_transfers == true else { return nil }
         

@@ -9,5 +9,5 @@ import Foundation
 
 enum ScheduleResultDestination: Hashable {
     case filter
-    case carrierInfo
+    case carrierInfo(carrierCode: String)
 }

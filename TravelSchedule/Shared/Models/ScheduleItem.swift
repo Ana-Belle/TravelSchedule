@@ -10,6 +10,7 @@ import Foundation
 struct ScheduleItem: Identifiable, Hashable {
     let id: String
     let carrierTitle: String
+    let carrierCode: String?
     let logoURL: String?
     let transferCity: String?
     let departure: Date

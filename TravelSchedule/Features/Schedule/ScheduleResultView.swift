@@ -40,8 +40,8 @@ struct ScheduleResultView: View {
                 ScheduleFilterView(filters: $viewModel.filters) { appliedFilters in
                     viewModel.applyFilters(appliedFilters)
                 }
-            case .carrierInfo:
-                CarrierInfoView()
+            case .carrierInfo(let carrierCode):
+                CarrierInfoView(carrierCode: carrierCode)
             }
         }
         .task {
@@ -77,10 +77,16 @@ struct ScheduleResultView: View {
                     ZStack(alignment: .bottom) {
                         List {
                             ForEach(viewModel.scheduleItems) { item in
-                                NavigationLink(value: ScheduleResultDestination.carrierInfo) {
-                                    scheduleItemRow(item)
+                                Group {
+                                    if let carrierCode = item.carrierCode {
+                                        NavigationLink(value: ScheduleResultDestination.carrierInfo(carrierCode: carrierCode)) {
+                                            scheduleItemRow(item)
+                                        }
+                                        .buttonStyle(.plain)
+                                    } else {
+                                        scheduleItemRow(item)
+                                    }
                                 }
-                                .buttonStyle(.plain)
                                 .onAppear {
                                     guard item.id == viewModel.scheduleItems.last?.id else { return }
                                     Task {
@@ -214,44 +220,6 @@ private var scheduleConnectorLine: some View {
         .fill(.grayUniversal)
         .frame(height: 1)
         .frame(maxWidth: .infinity)
-}
-
-private struct CarrierLogoView: View {
-    let logoURL: String?
-    
-    var body: some View {
-        Group {
-            if let logoURL, let url = URL(string: logoURL) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFit()
-                    case .failure:
-                        logoPlaceholder
-                    case .empty:
-                        ProgressView()
-                    @unknown default:
-                        logoPlaceholder
-                    }
-                }
-            } else {
-                logoPlaceholder
-            }
-        }
-        .frame(width: 38, height: 38)
-        .background {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.whiteUniversal)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-    
-    private var logoPlaceholder: some View {
-        Image(systemName: "tram.fill")
-            .foregroundStyle(.grayUniversal)
-    }
 }
 
 #Preview {
