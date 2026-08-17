@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ScheduleResultView: View {
-    @Environment(\.dismiss) private var dismiss
     @State private var viewModel: ScheduleResultViewModel
     
     init(fromStation: Station, toStation: Station) {
@@ -34,16 +33,7 @@ struct ScheduleResultView: View {
         .background(Color.whiteDayNight)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(viewModel.errorState == nil ? .hidden : .visible, for: .tabBar)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.backward")
-                }
-            }
-        }
+        .navigationScreenToolbar()
         .navigationDestination(for: ScheduleResultDestination.self) { destination in
             switch destination {
             case .filter:
@@ -268,17 +258,3 @@ private struct CarrierLogoView: View {
     ScheduleResultViewPreview()
 }
 
-private struct ScheduleResultViewPreview: View {
-    init() {
-        _ = APIServices.bootstrap()
-    }
-    
-    var body: some View {
-        NavigationStack {
-            ScheduleResultView(
-                fromStation: Station(id: "s9600213", title: "Москва"),
-                toStation: Station(id: "s9600366", title: "Санкт-Петербург")
-            )
-        }
-    }
-}

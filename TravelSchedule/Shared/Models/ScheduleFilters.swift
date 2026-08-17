@@ -8,8 +8,8 @@
 import Foundation
 
 enum TransfersFilter: Hashable {
-    case yes
-    case no
+    case withTransfers
+    case withoutTransfers
 }
 
 struct ScheduleFilters: Hashable {

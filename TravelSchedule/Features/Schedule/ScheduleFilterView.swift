@@ -42,8 +42,8 @@ struct ScheduleFilterView: View {
                             .font(.system(size: 24, weight: .bold))
                             .padding(.bottom, 16)
                         
-                        transfersRow(title: "Да", value: .yes)
-                        transfersRow(title: "Нет", value: .no)
+                        transfersRow(title: "Да", value: .withTransfers)
+                        transfersRow(title: "Нет", value: .withoutTransfers)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -59,16 +59,7 @@ struct ScheduleFilterView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.backward")
-                }
-            }
-        }
+        .navigationScreenToolbar()
     }
     
     private var applyButton: some View {
@@ -100,7 +91,7 @@ struct ScheduleFilterView: View {
                 
                 Spacer()
                 
-                SquareCheckbox(isSelected: draftFilters.selectedPeriods.contains(period))
+                SquareCheckboxView(isSelected: draftFilters.selectedPeriods.contains(period))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .frame(minHeight: 60)
@@ -120,7 +111,7 @@ struct ScheduleFilterView: View {
                 
                 Spacer()
                 
-                RadioButton(isSelected: draftFilters.transfers == value)
+                RadioButtonView(isSelected: draftFilters.transfers == value)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .frame(minHeight: 60)
@@ -138,7 +129,7 @@ struct ScheduleFilterView: View {
     }
 }
 
-private struct SquareCheckbox: View {
+private struct SquareCheckboxView: View {
     let isSelected: Bool
     
     var body: some View {
@@ -156,7 +147,7 @@ private struct SquareCheckbox: View {
     }
 }
 
-private struct RadioButton: View {
+private struct RadioButtonView: View {
     let isSelected: Bool
     
     var body: some View {

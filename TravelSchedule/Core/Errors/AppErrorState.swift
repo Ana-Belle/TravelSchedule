@@ -37,24 +37,3 @@ enum AppErrorState: Equatable {
         }
     }
 }
-
-private extension Error {
-    var isNoInternetError: Bool {
-        var currentError: Error? = self
-        
-        while let error = currentError {
-            if let urlError = error as? URLError {
-                switch urlError.code {
-                case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed:
-                    return true
-                default:
-                    break
-                }
-            }
-            
-            currentError = (error as NSError).userInfo[NSUnderlyingErrorKey] as? Error
-        }
-        
-        return false
-    }
-}

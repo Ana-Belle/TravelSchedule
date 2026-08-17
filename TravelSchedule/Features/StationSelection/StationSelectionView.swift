@@ -14,7 +14,6 @@ struct StationSelectionView: View {
     @Binding var toStation: Station?
     @Binding var navigationPath: NavigationPath
     
-    @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
     @State private var viewModel: StationSelectionViewModel
     
@@ -93,19 +92,9 @@ struct StationSelectionView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.whiteDayNight)
-        .navigationTitle("Выбор станции")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.backward")
-                }
-            }
-        }
+        .navigationScreenToolbar(title: "Выбор станции")
     }
     
     private func selectStation(_ station: Station) {

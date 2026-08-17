@@ -18,7 +18,11 @@ struct MainTabView: View {
         appearance.inlineLayoutAppearance.selected.iconColor = .blackDayNight
         appearance.compactInlineLayoutAppearance.normal.iconColor = .grayUniversal
         appearance.compactInlineLayoutAppearance.selected.iconColor = .blackDayNight
-        
+
+        Self.configureTabBarColors(appearance)
+    }
+    
+    private static func configureTabBarColors(_ appearance: UITabBarAppearance) {
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
         UITabBar.appearance().unselectedItemTintColor = .grayUniversal
@@ -47,12 +51,3 @@ struct MainTabView: View {
     MainTabViewPreview()
 }
 
-private struct MainTabViewPreview: View {
-    init() {
-        _ = APIServices.bootstrap()
-    }
-    
-    var body: some View {
-        MainTabView()
-    }
-}

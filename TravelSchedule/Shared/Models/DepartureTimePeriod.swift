@@ -12,7 +12,9 @@ enum DepartureTimePeriod: String, CaseIterable, Identifiable, Hashable {
     case afternoon
     case evening
     case night
-    
+
+    // MARK: - Public Properties
+
     var id: String { rawValue }
     
     var title: String {
@@ -40,7 +42,9 @@ enum DepartureTimePeriod: String, CaseIterable, Identifiable, Hashable {
             "00:00 - 06:00"
         }
     }
-    
+
+    // MARK: - Public Methods
+
     func contains(departure: Date, calendar: Calendar = ScheduleDateFormatting.calendar) -> Bool {
         contains(departureTime: ScheduleDateFormatting.formatTime(departure))
     }
@@ -52,7 +56,9 @@ enum DepartureTimePeriod: String, CaseIterable, Identifiable, Hashable {
             lessThan: endTimeExclusive
         )
     }
-    
+
+    // MARK: - Static Methods
+
     static func minutesFromDepartureTime(_ departureTime: String) -> Int? {
         let trimmed = departureTime.trimmingCharacters(in: .whitespacesAndNewlines)
         let parts = trimmed.split(separator: ":")
@@ -83,7 +89,9 @@ enum DepartureTimePeriod: String, CaseIterable, Identifiable, Hashable {
         
         return value >= startMinutes && value < endMinutes
     }
-    
+
+    // MARK: - Private Properties
+
     private var startTime: String {
         switch self {
         case .morning:

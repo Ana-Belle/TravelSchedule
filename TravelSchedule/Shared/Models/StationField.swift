@@ -20,8 +20,3 @@ enum StationField: Hashable {
         }
     }
 }
-
-struct StationRoute: Hashable {
-    let city: City
-    let field: StationField
-}

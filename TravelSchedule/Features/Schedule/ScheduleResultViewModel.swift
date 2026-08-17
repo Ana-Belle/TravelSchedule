@@ -50,7 +50,7 @@ final class ScheduleResultViewModel {
     }
     
     private var effectiveTransfers: TransfersFilter {
-        filters.transfers ?? .yes
+        filters.transfers ?? .withTransfers
     }
     
     func loadSchedule() async {
@@ -133,18 +133,18 @@ final class ScheduleResultViewModel {
     
     private var activeItems: [ScheduleItem] {
         switch effectiveTransfers {
-        case .yes:
+        case .withTransfers:
             cacheWithTransfers.items
-        case .no:
+        case .withoutTransfers:
             cacheDirect.items
         }
     }
     
     private var activeCache: ScheduleCache {
         switch effectiveTransfers {
-        case .yes:
+        case .withTransfers:
             cacheWithTransfers
-        case .no:
+        case .withoutTransfers:
             cacheDirect
         }
     }
@@ -190,7 +190,7 @@ final class ScheduleResultViewModel {
             calendar: calendar,
             startDate: startDate,
             dayRange: currentCache.nextDayOffset..<batchEnd,
-            includeTransfers: transfers == .yes
+            includeTransfers: transfers == .withTransfers
         )
         
         let newItems = Self.extractScheduleItems(from: batchSegments)
@@ -204,18 +204,18 @@ final class ScheduleResultViewModel {
     
     private func scheduleCache(for transfers: TransfersFilter) -> ScheduleCache {
         switch transfers {
-        case .yes:
+        case .withTransfers:
             cacheWithTransfers
-        case .no:
+        case .withoutTransfers:
             cacheDirect
         }
     }
     
     private func setScheduleCache(_ cache: ScheduleCache, for transfers: TransfersFilter) {
         switch transfers {
-        case .yes:
+        case .withTransfers:
             cacheWithTransfers = cache
-        case .no:
+        case .withoutTransfers:
             cacheDirect = cache
         }
     }

@@ -14,9 +14,18 @@ final class CitySelectionViewModel {
     var cities: [City] = []
     var isLoading = false
     var errorState: AppErrorState?
-    
+    var searchText = ""
+
     private let allStationsService: AllStationsServiceProtocol
-    
+
+    var filteredCities: [City] {
+        filteredCities(searchText: searchText)
+    }
+
+    var isSearchActive: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     init(allStationsService: AllStationsServiceProtocol = APIServices.shared.allStations) {
         self.allStationsService = allStationsService
     }
