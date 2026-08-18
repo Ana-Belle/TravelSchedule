@@ -11,6 +11,8 @@ struct MainView: View {
     @State private var navigationPath = NavigationPath()
     @State private var fromStation: Station?
     @State private var toStation: Station?
+    @State private var presentedStory: PresentedStory?
+    @State private var storiesViewedStore = StoriesViewedStore()
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -42,6 +44,10 @@ struct MainView: View {
                     )
                 }
         }
+        .fullScreenCover(item: $presentedStory) { story in
+            StoriesScreenView(initialIndex: story.id)
+                .environment(storiesViewedStore)
+        }
     }
     
     private var areStationsSelected: Bool {
@@ -53,15 +59,60 @@ struct MainView: View {
             
             Color.whiteDayNight
                 .overlay(alignment: .top) {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 0) {
+                        storiesRow
                         stationSelectionCard
+                            .padding(.top, 44)
                         searchButton
+                            .padding(.top, 16)
                     }
-                    .padding(.top, 252)
+                    .padding(.top, 96)
                     .padding(.horizontal, 16)
                 }
         }
         .ignoresSafeArea()
+    }
+    
+    private var storiesRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(StoriesContent.stories) { story in
+                    Button {
+                        presentedStory = PresentedStory(id: story.id)
+                    } label: {
+                        storyPreview(for: story)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func storyPreview(for story: Story) -> some View {
+        let isViewed = storiesViewedStore.isViewed(story.id)
+        
+        Image(story.imageName)
+            .resizable()
+            .scaledToFill()
+            .frame(width: 92, height: 140)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(alignment: .bottom) {
+                Text(story.title)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundStyle(.whiteUniversal)
+                    .lineLimit(3)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(8)
+            }
+            .overlay {
+                if !isViewed {
+                    RoundedRectangle(cornerRadius: 16)
+                        .strokeBorder(.blueUniversal, lineWidth: 4)
+                }
+            }
+            .opacity(isViewed ? 0.5 : 1)
     }
     
     private var stationSelectionCard: some View {
@@ -166,4 +217,8 @@ struct MainView: View {
 
 #Preview {
     MainView()
+}
+
+private struct PresentedStory: Identifiable {
+    let id: Int
 }

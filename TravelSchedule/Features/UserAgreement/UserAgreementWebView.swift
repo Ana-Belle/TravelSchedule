@@ -12,11 +12,11 @@ struct UserAgreementWebView: UIViewRepresentable {
     let url: URL
     @Binding var isLoading: Bool
     var onError: (Error) -> Void
-
+    
     func makeCoordinator() -> Coordinator {
         Coordinator(isLoading: $isLoading, onError: onError)
     }
-
+    
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
         webView.navigationDelegate = context.coordinator
@@ -26,28 +26,28 @@ struct UserAgreementWebView: UIViewRepresentable {
         webView.load(URLRequest(url: url))
         return webView
     }
-
+    
     func updateUIView(_ uiView: WKWebView, context: Context) {}
-
+    
     final class Coordinator: NSObject, WKNavigationDelegate {
         @Binding var isLoading: Bool
         let onError: (Error) -> Void
-
+        
         init(isLoading: Binding<Bool>, onError: @escaping (Error) -> Void) {
             _isLoading = isLoading
             self.onError = onError
         }
-
+        
         func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
             isLoading = true
         }
-
+        
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             webView.evaluateJavaScript(Self.hideChromeCSS) { _, _ in
                 self.isLoading = false
             }
         }
-
+        
         func webView(
             _ webView: WKWebView,
             didFail navigation: WKNavigation!,
@@ -56,7 +56,7 @@ struct UserAgreementWebView: UIViewRepresentable {
             isLoading = false
             onError(error)
         }
-
+        
         func webView(
             _ webView: WKWebView,
             didFailProvisionalNavigation navigation: WKNavigation!,
@@ -65,7 +65,7 @@ struct UserAgreementWebView: UIViewRepresentable {
             isLoading = false
             onError(error)
         }
-
+        
         private static let hideChromeCSS = """
         (function() {
             var style = document.createElement('style');

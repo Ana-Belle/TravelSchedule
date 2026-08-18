@@ -9,10 +9,10 @@ import SwiftUI
 
 struct UserAgreementView: View {
     private static let agreementURL = URL(string: "https://yandex.ru/legal/practicum_offer/ru/")!
-
+    
     @State private var isLoading = true
     @State private var errorState: AppErrorState?
-
+    
     var body: some View {
         Group {
             if let errorState {
@@ -26,7 +26,7 @@ struct UserAgreementView: View {
                             errorState = AppErrorState(error: error)
                         }
                     )
-
+                    
                     if isLoading {
                         ProgressView()
                     }
