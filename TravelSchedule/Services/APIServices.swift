@@ -16,6 +16,7 @@ final class APIServices {
     let allStations: AllStationsService
     let scheduleBetweenStations: ScheduleBetweenStationsService
     let carrierInfo: CarrierInfoService
+    let copyright: CopyrightService
     
     @discardableResult
     static func bootstrap() -> Bool {
@@ -39,5 +40,6 @@ final class APIServices {
         allStations = AllStationsService(client: client, apikey: Constants.apiKey)
         scheduleBetweenStations = ScheduleBetweenStationsService(client: client, apikey: Constants.apiKey)
         carrierInfo = CarrierInfoService(client: client, apikey: Constants.apiKey)
+        copyright = CopyrightService(client: client, apikey: Constants.apiKey)
     }
 }

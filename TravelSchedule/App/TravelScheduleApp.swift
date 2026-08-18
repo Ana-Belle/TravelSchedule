@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct TravelScheduleApp: App {
+    @State private var settingsViewModel = SettingsViewModel()
     private let isAPIAvailable: Bool
 
     init() {
@@ -19,6 +20,8 @@ struct TravelScheduleApp: App {
         WindowGroup {
             if isAPIAvailable {
                 MainTabView()
+                    .environment(settingsViewModel)
+                    .preferredColorScheme(settingsViewModel.isDarkModeEnabled ? .dark : .light)
             } else {
                 ErrorStateView(kind: .serverError)
             }

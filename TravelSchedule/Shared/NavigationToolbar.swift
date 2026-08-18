@@ -25,7 +25,9 @@ struct NavigationBackButton: View {
             dismiss()
         } label: {
             Image(systemName: "chevron.backward")
+                .foregroundStyle(.blackDayNight)
         }
+        .buttonStyle(.plain)
     }
 }
 

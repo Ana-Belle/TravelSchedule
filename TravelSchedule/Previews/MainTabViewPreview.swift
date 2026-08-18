@@ -14,5 +14,6 @@ struct MainTabViewPreview: View {
 
     var body: some View {
         MainTabView()
+            .environment(SettingsViewModel())
     }
 }

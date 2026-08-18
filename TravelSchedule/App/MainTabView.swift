@@ -8,7 +8,13 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @Environment(SettingsViewModel.self) private var settingsViewModel
+
     init() {
+        Self.configureTabBarAppearance()
+    }
+
+    private static func configureTabBarAppearance() {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = .whiteDayNight
@@ -19,9 +25,9 @@ struct MainTabView: View {
         appearance.compactInlineLayoutAppearance.normal.iconColor = .grayUniversal
         appearance.compactInlineLayoutAppearance.selected.iconColor = .blackDayNight
 
-        Self.configureTabBarColors(appearance)
+        configureTabBarColors(appearance)
     }
-    
+
     private static func configureTabBarColors(_ appearance: UITabBarAppearance) {
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
@@ -44,6 +50,9 @@ struct MainTabView: View {
                 }
         }
         .tint(.blackDayNight)
+        .onChange(of: settingsViewModel.isDarkModeEnabled) { _, _ in
+            Self.configureTabBarAppearance()
+        }
     }
 }
 
