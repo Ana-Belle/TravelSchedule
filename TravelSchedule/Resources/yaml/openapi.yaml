@@ -721,6 +721,9 @@ components:
         logo:
           type: string
           description: Ссылка на логотип перевозчика
+        logo_svg:
+          type: string
+          description: Ссылка на логотип перевозчика в формате SVG
         email:
           type: string
           description: Электронная почта перевозчика

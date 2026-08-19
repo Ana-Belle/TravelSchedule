@@ -40,8 +40,8 @@ struct ScheduleResultView: View {
                 ScheduleFilterView(filters: $viewModel.filters) { appliedFilters in
                     viewModel.applyFilters(appliedFilters)
                 }
-            case .carrierInfo(let carrierCode):
-                CarrierInfoView(carrierCode: carrierCode)
+            case .carrierInfo(let carrierCode, let logoSVGURL):
+                CarrierInfoView(carrierCode: carrierCode, logoSVGURL: logoSVGURL)
             }
         }
         .task {
@@ -79,7 +79,12 @@ struct ScheduleResultView: View {
                             ForEach(viewModel.scheduleItems) { item in
                                 Group {
                                     if let carrierCode = item.carrierCode {
-                                        NavigationLink(value: ScheduleResultDestination.carrierInfo(carrierCode: carrierCode)) {
+                                        NavigationLink(
+                                            value: ScheduleResultDestination.carrierInfo(
+                                                carrierCode: carrierCode,
+                                                logoSVGURL: item.logoSVGURL
+                                            )
+                                        ) {
                                             scheduleItemRow(item)
                                         }
                                         .buttonStyle(.plain)
@@ -151,7 +156,7 @@ struct ScheduleResultView: View {
     private func scheduleItemRow(_ item: ScheduleItem) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 12) {
-                CarrierLogoView(logoURL: item.logoURL)
+                CarrierLogoView(logoSVGURL: item.logoSVGURL, logoURL: item.logoURL)
                 
                 HStack(alignment: .top, spacing: 8) {
                     Group {

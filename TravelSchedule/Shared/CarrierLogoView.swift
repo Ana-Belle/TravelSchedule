@@ -8,12 +8,21 @@
 import SwiftUI
 
 struct CarrierLogoView: View {
+    let logoSVGURL: String?
     let logoURL: String?
     var size: CGFloat = 38
 
+    init(logoSVGURL: String?, logoURL: String? = nil, size: CGFloat = 38) {
+        self.logoSVGURL = logoSVGURL
+        self.logoURL = logoURL
+        self.size = size
+    }
+
     var body: some View {
         Group {
-            if let logoURL, let url = URL(string: logoURL) {
+            if let logoSVGURL {
+                CarrierSVGLogoView(urlString: logoSVGURL, size: size, fillsSquare: true)
+            } else if let logoURL, let url = RemoteURL.normalized(from: logoURL) {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .success(let image):

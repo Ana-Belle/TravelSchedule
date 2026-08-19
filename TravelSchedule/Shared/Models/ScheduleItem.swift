@@ -12,6 +12,7 @@ struct ScheduleItem: Identifiable, Hashable {
     let carrierTitle: String
     let carrierCode: String?
     let logoURL: String?
+    let logoSVGURL: String?
     let transferCity: String?
     let departure: Date
     let departureDate: String

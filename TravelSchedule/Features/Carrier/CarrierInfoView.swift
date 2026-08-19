@@ -9,11 +9,13 @@ import SwiftUI
 
 struct CarrierInfoView: View {
     @State private var viewModel: CarrierInfoViewModel
-
-    init(carrierCode: String) {
+    private let preferredLogoSVGURL: String?
+    
+    init(carrierCode: String, logoSVGURL: String? = nil) {
         _viewModel = State(initialValue: CarrierInfoViewModel(carrierCode: carrierCode))
+        preferredLogoSVGURL = logoSVGURL
     }
-
+    
     var body: some View {
         Group {
             if let errorState = viewModel.errorState {
@@ -39,24 +41,24 @@ struct CarrierInfoView: View {
             await viewModel.loadCarrierInfo()
         }
     }
-
+    
     private func carrierContent(_ carrier: Carrier) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                carrierLogo(carrier.logoURL)
-
+                carrierLogo(for: carrier)
+                
                 VStack(alignment: .leading, spacing: 0) {
                     if !carrier.title.isEmpty {
                         Text(carrier.title)
                             .foregroundStyle(.blackDayNight)
                             .font(.system(size: 24, weight: .bold))
                     }
-
+                    
                     if let email = carrier.email, !email.isEmpty {
                         infoRow(title: "E-mail", value: email)
                             .padding(.top, carrier.title.isEmpty ? 0 : 28)
                     }
-
+                    
                     if let phone = carrier.phone, !phone.isEmpty {
                         infoRow(title: "Телефон", value: phone)
                             .padding(.top, phoneTopPadding(for: carrier))
@@ -68,52 +70,69 @@ struct CarrierInfoView: View {
             .padding(.bottom, 32)
         }
     }
-
-    private func carrierLogo(_ logoURL: String?) -> some View {
-        Group {
-            if let logoURL, let url = URL(string: logoURL) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFit()
-                    case .failure:
-                        logoPlaceholder
-                    case .empty:
-                        ProgressView()
-                    @unknown default:
-                        logoPlaceholder
-                    }
-                }
-            } else {
-                logoPlaceholder
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 16)
+    
+    @ViewBuilder
+    private func carrierLogo(for carrier: Carrier) -> some View {
+        logoContent(for: carrier)
+            .padding(16)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .frame(height: 104)
+            .background(.whiteUniversal, in: RoundedRectangle(cornerRadius: 24))
+            .clipShape(RoundedRectangle(cornerRadius: 24))
+            .padding(.horizontal, 16)
     }
-
+    
+    @ViewBuilder
+    private func logoContent(for carrier: Carrier) -> some View {
+        if let logoURL = carrier.logoURL, let url = RemoteURL.normalized(from: logoURL) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                case .failure:
+                    svgLogo(for: carrier)
+                case .empty:
+                    ProgressView()
+                @unknown default:
+                    svgLogo(for: carrier)
+                }
+            }
+        } else {
+            svgLogo(for: carrier)
+        }
+    }
+    
+    @ViewBuilder
+    private func svgLogo(for carrier: Carrier) -> some View {
+        if let logoSVGURL = preferredLogoSVGURL ?? carrier.logoSVGURL {
+            CarrierSVGLogoView(urlString: logoSVGURL, size: 72)
+        } else {
+            logoPlaceholder
+        }
+    }
+    
     private var logoPlaceholder: some View {
         Image(systemName: "tram.fill")
             .foregroundStyle(.grayUniversal)
-            .frame(maxWidth: .infinity, minHeight: 80)
     }
-
+    
     private func phoneTopPadding(for carrier: Carrier) -> CGFloat {
         if let email = carrier.email, !email.isEmpty {
             return 16
         }
-
+        
         return carrier.title.isEmpty ? 0 : 28
     }
-
+    
     private func infoRow(title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .foregroundStyle(.blackDayNight)
                 .font(.system(size: 17, weight: .regular))
-
+            
             Text(value)
                 .foregroundStyle(.blueUniversal)
                 .font(.system(size: 12, weight: .regular))
