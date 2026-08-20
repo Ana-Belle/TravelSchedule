@@ -6,8 +6,6 @@
 //
 
 import SwiftUI
-import OpenAPIRuntime
-import OpenAPIURLSession
 
 struct ContentView: View {
     var body: some View {
@@ -24,38 +22,22 @@ struct ContentView: View {
     }
     
     private func testServices() {
-        Task {
-            do {
-                let client = Client(
-                    serverURL: try Servers.Server1.url(),
-                    transport: URLSessionTransport()
-                )
-                
-                print("Fetching services...")
-                
-                testFetchStations(client: client)
-                testScheduleBetweenStations(client: client)
-                testStationSchedule(client: client)
-                testRouteStations(client: client)
-                testNearestCity(client: client)
-                testCarrierInfo(client: client)
-                testAllStations(client: client)
-                testCopyright(client: client)
-                
-            } catch {
-                print("Error fetching services: \(error)")
-            }
-        }
+        guard APIServices.bootstrap() else { return }
+        
+        testFetchStations()
+        testScheduleBetweenStations()
+        testStationSchedule()
+        testRouteStations()
+        testNearestCity()
+        testCarrierInfo()
+        testAllStations()
+        testCopyright()
     }
     
-    
-    private func testFetchStations(client: Client) {
+    private func testFetchStations() {
         Task {
             do {
-                let service = NearestStationsService(
-                    client: client,
-                    apikey: Constants.apiKey
-                )
+                let service = APIServices.shared.nearestStations
                 
                 print("Fetching stations...")
                 let stations = try await service.getNearestStations(
@@ -71,13 +53,10 @@ struct ContentView: View {
         }
     }
     
-    private func testScheduleBetweenStations(client: Client) {
+    private func testScheduleBetweenStations() {
         Task {
             do {
-                let service = ScheduleBetweenStationsService(
-                    client: client,
-                    apikey: Constants.apiKey
-                )
+                let service = APIServices.shared.scheduleBetweenStations
                 
                 print("Fetching schedule between stations...")
                 let schedule = try await service.getScheduleBetweenStations(
@@ -93,13 +72,10 @@ struct ContentView: View {
         }
     }
     
-    private func testStationSchedule(client: Client) {
+    private func testStationSchedule() {
         Task {
             do {
-                let service = StationScheduleService(
-                    client: client,
-                    apikey: Constants.apiKey
-                )
+                let service = APIServices.shared.stationSchedule
                 
                 print("Fetching schedule between stations...")
                 let schedule = try await service.getStationSchedule(
@@ -114,13 +90,10 @@ struct ContentView: View {
         }
     }
     
-    private func testRouteStations(client: Client) {
+    private func testRouteStations() {
         Task {
             do {
-                let service = RouteStationsService(
-                    client: client,
-                    apikey: Constants.apiKey
-                )
+                let service = APIServices.shared.routeStations
                 
                 print("Fetching route stations...")
                 let stations = try await service.getRouteStations(
@@ -135,13 +108,10 @@ struct ContentView: View {
         }
     }
     
-    private func testNearestCity(client: Client) {
+    private func testNearestCity() {
         Task {
             do {
-                let service = NearestCityService(
-                    client: client,
-                    apikey: Constants.apiKey
-                )
+                let service = APIServices.shared.nearestCity
                 
                 print("Fetching nearest city...")
                 let city = try await service.getNearestCity(
@@ -157,13 +127,10 @@ struct ContentView: View {
         }
     }
     
-    private func testCarrierInfo(client: Client) {
+    private func testCarrierInfo() {
         Task {
             do {
-                let service = CarrierInfoService(
-                    client: client,
-                    apikey: Constants.apiKey
-                )
+                let service = APIServices.shared.carrierInfo
                 
                 print("Fetching carrier info...")
                 let info = try await service.getCarrierInfo(
@@ -177,13 +144,10 @@ struct ContentView: View {
         }
     }
     
-    private func testAllStations(client: Client) {
+    private func testAllStations() {
         Task {
             do {
-                let service = AllStationsService(
-                    client: client,
-                    apikey: Constants.apiKey
-                )
+                let service = APIServices.shared.allStations
                 
                 print("Fetching all stations...")
                 let stations = try await service.getAllStations()
@@ -195,13 +159,10 @@ struct ContentView: View {
         }
     }
     
-    private func testCopyright(client: Client) {
+    private func testCopyright() {
         Task {
             do {
-                let service = CopyrightService(
-                    client: client,
-                    apikey: Constants.apiKey
-                )
+                let service = APIServices.shared.copyright
                 
                 print("Fetching copyright...")
                 let copyright = try await service.getCopyright()

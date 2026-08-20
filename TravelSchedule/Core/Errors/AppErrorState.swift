@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum AppErrorState: Equatable {
+enum AppErrorState: Equatable, Sendable {
     case noInternet
     case serverError
     

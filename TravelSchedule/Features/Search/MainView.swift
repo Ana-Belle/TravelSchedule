@@ -8,13 +8,12 @@
 import SwiftUI
 
 struct MainView: View {
+    @State private var viewModel = MainViewModel()
     @State private var navigationPath = NavigationPath()
-    @State private var fromStation: Station?
-    @State private var toStation: Station?
-    @State private var presentedStory: PresentedStory?
-    @State private var storiesViewedStore = StoriesViewedStore()
     
     var body: some View {
+        @Bindable var viewModel = viewModel
+        
         NavigationStack(path: $navigationPath) {
             scheduleContent
                 .navigationDestination(for: ScheduleDestination.self) { destination in
@@ -22,8 +21,8 @@ struct MainView: View {
                     case .citySelection(let field):
                         CitySelectionView(
                             field: field,
-                            fromStation: $fromStation,
-                            toStation: $toStation,
+                            fromStation: $viewModel.fromStation,
+                            toStation: $viewModel.toStation,
                             navigationPath: $navigationPath
                         )
                     }
@@ -32,8 +31,8 @@ struct MainView: View {
                     StationSelectionView(
                         city: route.city,
                         field: route.field,
-                        fromStation: $fromStation,
-                        toStation: $toStation,
+                        fromStation: $viewModel.fromStation,
+                        toStation: $viewModel.toStation,
                         navigationPath: $navigationPath
                     )
                 }
@@ -44,19 +43,16 @@ struct MainView: View {
                     )
                 }
         }
-        .fullScreenCover(item: $presentedStory) { story in
-            StoriesScreenView(initialIndex: story.id)
-                .environment(storiesViewedStore)
+        .fullScreenCover(item: $viewModel.presentedStory) { story in
+            StoriesScreenView(
+                initialIndex: story.id,
+                viewedStore: viewModel.storiesViewedStore
+            )
         }
-    }
-    
-    private var areStationsSelected: Bool {
-        fromStation != nil && toStation != nil
     }
     
     private var scheduleContent: some View {
         GeometryReader { _ in
-            
             Color.whiteDayNight
                 .overlay(alignment: .top) {
                     VStack(spacing: 0) {
@@ -76,9 +72,9 @@ struct MainView: View {
     private var storiesRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                ForEach(StoriesContent.stories) { story in
+                ForEach(viewModel.stories) { story in
                     Button {
-                        presentedStory = PresentedStory(id: story.id)
+                        viewModel.openStory(id: story.id)
                     } label: {
                         storyPreview(for: story)
                     }
@@ -90,7 +86,7 @@ struct MainView: View {
     
     @ViewBuilder
     private func storyPreview(for story: Story) -> some View {
-        let isViewed = storiesViewedStore.isViewed(story.id)
+        let isViewed = viewModel.isStoryViewed(story.id)
         
         Image(story.imageName)
             .resizable()
@@ -142,14 +138,12 @@ struct MainView: View {
         )
     }
     
-    private func stationLink(
-        for field: StationField
-    ) -> some View {
+    private func stationLink(for field: StationField) -> some View {
         NavigationLink(
             value: ScheduleDestination.citySelection(field)
         ) {
-            Text(stationTitle(for: field))
-                .foregroundStyle(stationTitleColor(for: field))
+            Text(viewModel.stationTitle(for: field))
+                .foregroundStyle(viewModel.stationTitleColor(for: field))
                 .font(.system(size: 17, weight: .regular))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
@@ -158,20 +152,9 @@ struct MainView: View {
         .padding(.top, 14)
     }
     
-    private func stationTitle(
-        for field: StationField
-    ) -> String {
-        switch field {
-        case .from:
-            fromStation?.title ?? field.placeholder
-        case .to:
-            toStation?.title ?? field.placeholder
-        }
-    }
-    
     private var swapStationsButton: some View {
         Button {
-            swap(&fromStation, &toStation)
+            viewModel.swapStations()
         } label: {
             Image("Change")
                 .frame(width: 36, height: 36)
@@ -183,14 +166,9 @@ struct MainView: View {
     
     @ViewBuilder
     private var searchButton: some View {
-        if let fromStation, let toStation {
+        if let route = viewModel.makeSearchRoute() {
             Button {
-                navigationPath.append(
-                    ScheduleSearchRoute(
-                        fromStation: fromStation,
-                        toStation: toStation
-                    )
-                )
+                navigationPath.append(route)
             } label: {
                 Text("Найти")
                     .font(.system(size: 17, weight: .bold))
@@ -204,21 +182,8 @@ struct MainView: View {
             .buttonStyle(.plain)
         }
     }
-    
-    private func stationTitleColor(for field: StationField) -> Color {
-        switch field {
-        case .from:
-            fromStation == nil ? .grayUniversal : .blackUniversal
-        case .to:
-            toStation == nil ? .grayUniversal : .blackUniversal
-        }
-    }
 }
 
 #Preview {
     MainView()
-}
-
-private struct PresentedStory: Identifiable {
-    let id: Int
 }

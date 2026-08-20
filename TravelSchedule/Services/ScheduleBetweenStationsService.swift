@@ -23,7 +23,6 @@ protocol ScheduleBetweenStationsServiceProtocol {
 }
 
 final class ScheduleBetweenStationsService: BaseService, ScheduleBetweenStationsServiceProtocol {
-    
     func getScheduleBetweenStations(
         from: String,
         to: String,
@@ -33,22 +32,14 @@ final class ScheduleBetweenStationsService: BaseService, ScheduleBetweenStations
         transfers: Bool? = nil,
         resultTimeZone: String? = ScheduleDateFormatting.resultTimeZoneIdentifier
     ) async throws -> ScheduleBetweenStations {
-        
-        let response = try await client.getScheduleBetweenStations(query: .init(
-            apikey: apikey,
+        try await networkClient.getScheduleBetweenStations(
             from: from,
             to: to,
             date: date,
             offset: offset,
             limit: limit,
-            result_timezone: resultTimeZone,
-            transfers: transfers
-        ))
-        
-        if case .undocumented(404, _) = response {
-            return Components.Schemas.Segments(segments: [])
-        }
-        
-        return try response.ok.body.json
+            transfers: transfers,
+            resultTimeZone: resultTimeZone
+        )
     }
 }

@@ -12,11 +12,15 @@ import OpenAPIURLSession
 final class APIServices {
     private(set) static var shared: APIServices!
     
-    let client: Client
+    let networkClient: NetworkClient
     let allStations: AllStationsService
     let scheduleBetweenStations: ScheduleBetweenStationsService
     let carrierInfo: CarrierInfoService
     let copyright: CopyrightService
+    let nearestCity: NearestCityService
+    let nearestStations: NearestStationsService
+    let routeStations: RouteStationsService
+    let stationSchedule: StationScheduleService
     
     @discardableResult
     static func bootstrap() -> Bool {
@@ -32,14 +36,20 @@ final class APIServices {
     }
     
     private init() throws {
-        client = Client(
+        let client = Client(
             serverURL: try Servers.Server1.url(),
             transport: URLSessionTransport()
         )
         
-        allStations = AllStationsService(client: client, apikey: Constants.apiKey)
-        scheduleBetweenStations = ScheduleBetweenStationsService(client: client, apikey: Constants.apiKey)
-        carrierInfo = CarrierInfoService(client: client, apikey: Constants.apiKey)
-        copyright = CopyrightService(client: client, apikey: Constants.apiKey)
+        networkClient = NetworkClient(client: client, apikey: Constants.apiKey)
+        
+        allStations = AllStationsService(networkClient: networkClient)
+        scheduleBetweenStations = ScheduleBetweenStationsService(networkClient: networkClient)
+        carrierInfo = CarrierInfoService(networkClient: networkClient)
+        copyright = CopyrightService(networkClient: networkClient)
+        nearestCity = NearestCityService(networkClient: networkClient)
+        nearestStations = NearestStationsService(networkClient: networkClient)
+        routeStations = RouteStationsService(networkClient: networkClient)
+        stationSchedule = StationScheduleService(networkClient: networkClient)
     }
 }

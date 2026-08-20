@@ -9,22 +9,20 @@ import SwiftUI
 
 struct StoriesScreenView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(StoriesViewedStore.self) private var viewedStore
+    @State private var viewModel: StoriesScreenViewModel
     
-    let stories: [Story]
-    let initialIndex: Int
-    
-    @State private var currentIndex: Int
-    @State private var progress: Double = 0
-    @State private var verticalDragOffset: CGFloat = 0
-    
-    private let storyDuration: TimeInterval = 10
-    private let dismissDragThreshold: CGFloat = 120
-    
-    init(stories: [Story] = StoriesContent.stories, initialIndex: Int = 0) {
-        self.stories = stories
-        self.initialIndex = initialIndex
-        _currentIndex = State(initialValue: initialIndex)
+    init(
+        stories: [Story] = StoriesContent.stories,
+        initialIndex: Int = 0,
+        viewedStore: StoriesViewedStore
+    ) {
+        _viewModel = State(
+            initialValue: StoriesScreenViewModel(
+                stories: stories,
+                initialIndex: initialIndex,
+                viewedStore: viewedStore
+            )
+        )
     }
     
     var body: some View {
@@ -40,8 +38,8 @@ struct StoriesScreenView: View {
                 
                 ZStack(alignment: .top) {
                     storyImage(size: storySize)
-                        .offset(y: verticalDragOffset)
-                        .opacity(dismissOpacity)
+                        .offset(y: viewModel.verticalDragOffset)
+                        .opacity(viewModel.dismissOpacity)
                     
                     navigationOverlay
                     
@@ -60,21 +58,20 @@ struct StoriesScreenView: View {
                         
                         Spacer()
                         
-                        Text(stories[currentIndex].title)
+                        Text(viewModel.currentStory.title)
                             .foregroundStyle(.whiteUniversal)
                             .font(.system(size: 34, weight: .bold))
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16)
                         
-                        Text(stories[currentIndex].description)
+                        Text(viewModel.currentStory.description)
                             .foregroundStyle(.whiteUniversal)
                             .font(.system(size: 20, weight: .regular))
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 16)
                             .padding(.bottom, 40)
-                        
                     }
                 }
                 .frame(width: storySize.width, height: storySize.height)
@@ -85,18 +82,22 @@ struct StoriesScreenView: View {
         }
         .gesture(navigationGesture)
         .onAppear {
-            markCurrentStoryAsViewed()
+            viewModel.markCurrentStoryAsViewed()
         }
-        .onChange(of: currentIndex) { _, _ in
-            markCurrentStoryAsViewed()
+        .onChange(of: viewModel.currentIndex) { _, _ in
+            viewModel.markCurrentStoryAsViewed()
         }
-        .task(id: currentIndex) {
-            await runStoryTimer()
+        .onChange(of: viewModel.shouldDismiss) { _, shouldDismiss in
+            guard shouldDismiss else { return }
+            dismiss()
+        }
+        .task(id: viewModel.currentIndex) {
+            await viewModel.runStoryTimer()
         }
     }
     
     private func storyImage(size: CGSize) -> some View {
-        Image(stories[currentIndex].imageName)
+        Image(viewModel.currentStory.imageName)
             .resizable()
             .scaledToFill()
             .frame(width: size.width, height: size.height)
@@ -105,7 +106,7 @@ struct StoriesScreenView: View {
     
     private var closeButton: some View {
         Button {
-            dismiss()
+            viewModel.requestDismiss()
         } label: {
             Image(systemName: "xmark")
                 .font(.system(size: 10, weight: .bold))
@@ -118,7 +119,7 @@ struct StoriesScreenView: View {
     
     private var progressIndicators: some View {
         HStack(spacing: 4) {
-            ForEach(stories.indices, id: \.self) { index in
+            ForEach(viewModel.stories.indices, id: \.self) { index in
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         Capsule()
@@ -126,7 +127,12 @@ struct StoriesScreenView: View {
                         
                         Capsule()
                             .fill(.blueUniversal)
-                            .frame(width: progressWidth(for: index, totalWidth: geometry.size.width))
+                            .frame(
+                                width: viewModel.progressWidth(
+                                    for: index,
+                                    totalWidth: geometry.size.width
+                                )
+                            )
                     }
                 }
                 .frame(height: 6)
@@ -140,13 +146,13 @@ struct StoriesScreenView: View {
             Color.clear
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    goToPreviousStory()
+                    viewModel.goToPreviousStory()
                 }
             
             Color.clear
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    goToNextStory()
+                    viewModel.goToNextStory()
                 }
         }
     }
@@ -154,84 +160,21 @@ struct StoriesScreenView: View {
     private var navigationGesture: some Gesture {
         DragGesture(minimumDistance: 20)
             .onChanged { value in
-                guard abs(value.translation.height) > abs(value.translation.width) else { return }
-                verticalDragOffset = max(0, value.translation.height)
+                viewModel.handleDragChanged(translation: value.translation)
             }
             .onEnded { value in
-                let horizontalMovement = value.translation.width
-                let verticalMovement = value.translation.height
-                
-                if verticalMovement > dismissDragThreshold,
-                   abs(verticalMovement) > abs(horizontalMovement) {
+                switch viewModel.handleDragEnded(translation: value.translation) {
+                case .dismissScreen:
                     dismiss()
-                    return
-                }
-                
-                if horizontalMovement < -50 {
-                    goToNextStory()
-                } else if horizontalMovement > 50 {
-                    goToPreviousStory()
-                }
-                
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    verticalDragOffset = 0
+                case .resetOffset:
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        viewModel.resetDragOffset()
+                    }
                 }
             }
-    }
-    
-    private var dismissOpacity: Double {
-        let progress = min(max(verticalDragOffset / 300, 0), 1)
-        return 1 - progress * 0.4
-    }
-    
-    private func progressWidth(for index: Int, totalWidth: CGFloat) -> CGFloat {
-        if index < currentIndex {
-            return totalWidth
-        }
-        
-        if index > currentIndex {
-            return 0
-        }
-        
-        return totalWidth * progress
-    }
-    
-    private func runStoryTimer() async {
-        progress = 0
-        let startDate = Date()
-        
-        while !Task.isCancelled {
-            let elapsed = Date().timeIntervalSince(startDate)
-            progress = min(elapsed / storyDuration, 1)
-            
-            if elapsed >= storyDuration {
-                goToNextStory()
-                return
-            }
-            
-            try? await Task.sleep(for: .milliseconds(50))
-        }
-    }
-    
-    private func goToNextStory() {
-        if currentIndex < stories.count - 1 {
-            currentIndex += 1
-        } else {
-            dismiss()
-        }
-    }
-    
-    private func goToPreviousStory() {
-        guard currentIndex > 0 else { return }
-        currentIndex -= 1
-    }
-    
-    private func markCurrentStoryAsViewed() {
-        viewedStore.markAsViewed(stories[currentIndex].id)
     }
 }
 
 #Preview {
-    StoriesScreenView()
-        .environment(StoriesViewedStore())
+    StoriesScreenView(viewedStore: StoriesViewedStore())
 }

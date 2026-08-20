@@ -7,12 +7,12 @@
 
 import Foundation
 
-enum TransfersFilter: Hashable {
+enum TransfersFilter: Hashable, Sendable {
     case withTransfers
     case withoutTransfers
 }
 
-struct ScheduleFilters: Hashable {
+struct ScheduleFilters: Hashable, Sendable {
     var selectedPeriods: Set<DepartureTimePeriod> = []
     var transfers: TransfersFilter? = nil
     

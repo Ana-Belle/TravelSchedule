@@ -408,7 +408,7 @@ final class ScheduleResultViewModel {
     }
 }
 
-private struct ScheduleCache {
+private struct ScheduleCache: Sendable {
     var items: [ScheduleItem] = []
     var nextDayOffset = 0
     var hasMoreDays = true

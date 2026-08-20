@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum StationField: Hashable {
+enum StationField: Hashable, Sendable {
     case from
     case to
     

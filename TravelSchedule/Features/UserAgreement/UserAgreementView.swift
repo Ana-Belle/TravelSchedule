@@ -8,26 +8,23 @@
 import SwiftUI
 
 struct UserAgreementView: View {
-    private static let agreementURL = URL(string: "https://yandex.ru/legal/practicum_offer/ru/")!
-    
-    @State private var isLoading = true
-    @State private var errorState: AppErrorState?
+    @State private var viewModel = UserAgreementViewModel()
     
     var body: some View {
+        @Bindable var viewModel = viewModel
+        
         Group {
-            if let errorState {
+            if let errorState = viewModel.errorState {
                 ErrorStateView(kind: errorState)
             } else {
                 ZStack {
                     UserAgreementWebView(
-                        url: Self.agreementURL,
-                        isLoading: $isLoading,
-                        onError: { error in
-                            errorState = AppErrorState(error: error)
-                        }
+                        url: viewModel.agreementURL,
+                        isLoading: $viewModel.isLoading,
+                        onError: viewModel.handleError
                     )
                     
-                    if isLoading {
+                    if viewModel.isLoading {
                         ProgressView()
                     }
                 }

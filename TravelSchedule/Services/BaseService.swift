@@ -6,11 +6,9 @@
 //
 
 class BaseService {
-    let client: Client
-    let apikey: String
+    let networkClient: NetworkClient
     
-    init(client: Client, apikey: String) {
-        self.client = client
-        self.apikey = apikey
+    init(networkClient: NetworkClient) {
+        self.networkClient = networkClient
     }
 }
