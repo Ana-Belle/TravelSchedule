@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum ScheduleResultDestination: Hashable {
+enum ScheduleResultDestination: Hashable, Sendable {
     case filter
     case carrierInfo(carrierCode: String, logoSVGURL: String? = nil)
 }

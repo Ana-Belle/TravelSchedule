@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ScheduleItem: Identifiable, Hashable {
+struct ScheduleItem: Identifiable, Hashable, Sendable {
     let id: String
     let carrierTitle: String
     let carrierCode: String?

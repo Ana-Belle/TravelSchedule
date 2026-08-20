@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ScheduleSearchRoute: Hashable {
+struct ScheduleSearchRoute: Hashable, Sendable {
     let fromStation: Station
     let toStation: Station
 }

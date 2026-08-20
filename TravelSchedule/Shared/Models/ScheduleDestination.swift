@@ -5,6 +5,6 @@
 //  Created by Anastasia Belyakova on 17.08.2026.
 //
 
-enum ScheduleDestination: Hashable {
+enum ScheduleDestination: Hashable, Sendable {
     case citySelection(StationField)
 }

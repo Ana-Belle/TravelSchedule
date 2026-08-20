@@ -15,16 +15,7 @@ protocol StationScheduleServiceProtocol {
 }
 
 final class StationScheduleService: BaseService, StationScheduleServiceProtocol {
-    
     func getStationSchedule(station: String, date: String? = nil) async throws -> StationSchedule {
-        
-        let response = try await client.getStationSchedule(query: .init(
-            apikey: apikey,
-            station: station,
-            date: date
-        ))
-        
-        return try response.ok.body.json
+        try await networkClient.getStationSchedule(station: station, date: date)
     }
 }
-

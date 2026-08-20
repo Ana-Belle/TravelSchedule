@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Story: Identifiable {
+struct Story: Identifiable, Sendable {
     let id: Int
     let imageName: String
     let title: String
