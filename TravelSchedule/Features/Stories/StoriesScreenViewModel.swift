@@ -35,7 +35,7 @@ final class StoriesScreenViewModel {
     }
     
     init(
-        stories: [Story] = StoriesContent.stories,
+        stories: [Story] = Story.mocks,
         initialIndex: Int = 0,
         viewedStore: StoriesViewedStore
     ) {

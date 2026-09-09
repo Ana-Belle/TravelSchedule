@@ -14,12 +14,14 @@ struct Story: Identifiable, Sendable {
     let description: String
 }
 
-enum StoriesContent {
-    static let stories: [Story] = [
-        Story(id: 0, imageName: "Story1", title: "Text Text Text Text Text Text Text Text Text", description: "Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text"),
-        Story(id: 1, imageName: "Story2", title: "Text Text Text Text Text Text Text Text Text", description: "Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text"),
-        Story(id: 2, imageName: "Story3", title: "Text Text Text Text Text Text Text Text Text", description: "Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text"),
-        Story(id: 3, imageName: "Story4", title: "Text Text Text Text Text Text Text Text Text", description: "Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text"),
-        Story(id: 4, imageName: "Story5", title: "Text Text Text Text Text Text Text Text Text", description: "Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text")
-    ]
+extension Story {
+    static let mocks: [Story] = (1...5).map { index in
+        Story(
+            id: index - 1,
+            imageName: "Story\(index)",
+            title: "Text Text Text Text Text Text Text Text Text",
+            description: "Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text"
+        )
+    }
 }
+

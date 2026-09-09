@@ -8,11 +8,16 @@
 import SwiftUI
 
 struct StoriesScreenView: View {
+    
+    // MARK: - Properties
+    
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: StoriesScreenViewModel
     
+    // MARK: - Lifecycle
+    
     init(
-        stories: [Story] = StoriesContent.stories,
+        stories: [Story] = Story.mocks,
         initialIndex: Int = 0,
         viewedStore: StoriesViewedStore
     ) {
@@ -96,6 +101,8 @@ struct StoriesScreenView: View {
         }
     }
     
+    // MARK: - Private Views
+    
     private func storyImage(size: CGSize) -> some View {
         Image(viewModel.currentStory.imageName)
             .resizable()
@@ -156,6 +163,8 @@ struct StoriesScreenView: View {
                 }
         }
     }
+    
+    // MARK: - Private Gestures
     
     private var navigationGesture: some Gesture {
         DragGesture(minimumDistance: 20)

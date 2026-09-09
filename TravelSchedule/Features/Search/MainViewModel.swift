@@ -18,7 +18,7 @@ final class MainViewModel {
     let storiesViewedStore: StoriesViewedStore
     
     init(
-        stories: [Story] = StoriesContent.stories,
+        stories: [Story] = Story.mocks,
         storiesViewedStore: StoriesViewedStore = StoriesViewedStore()
     ) {
         self.stories = stories
