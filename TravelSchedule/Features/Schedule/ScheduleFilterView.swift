@@ -13,12 +13,9 @@ struct ScheduleFilterView: View {
     
     @State private var draftFilters: ScheduleFilters
     
-    let onApply: (ScheduleFilters) -> Void
-    
-    init(filters: Binding<ScheduleFilters>, onApply: @escaping (ScheduleFilters) -> Void) {
+    init(filters: Binding<ScheduleFilters>) {
         _filters = filters
         _draftFilters = State(initialValue: filters.wrappedValue)
-        self.onApply = onApply
     }
     
     var body: some View {
@@ -65,7 +62,6 @@ struct ScheduleFilterView: View {
     private var applyButton: some View {
         Button {
             filters = draftFilters
-            onApply(draftFilters)
             dismiss()
         } label: {
             Text("Применить")
@@ -169,6 +165,6 @@ private struct RadioButtonView: View {
     @Previewable @State var filters = ScheduleFilters()
     
     NavigationStack {
-        ScheduleFilterView(filters: $filters) { _ in }
+        ScheduleFilterView(filters: $filters)
     }
 }

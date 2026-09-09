@@ -37,9 +37,7 @@ struct ScheduleResultView: View {
         .navigationDestination(for: ScheduleResultDestination.self) { destination in
             switch destination {
             case .filter:
-                ScheduleFilterView(filters: $viewModel.filters) { appliedFilters in
-                    viewModel.applyFilters(appliedFilters)
-                }
+                ScheduleFilterView(filters: $viewModel.filters)
             case .carrierInfo(let carrierCode, let logoSVGURL):
                 CarrierInfoView(carrierCode: carrierCode, logoSVGURL: logoSVGURL)
             }

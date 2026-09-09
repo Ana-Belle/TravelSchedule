@@ -1,0 +1,4 @@
+// Copy this file to Config.xcconfig and paste your Yandex Schedules API key.
+// Config.xcconfig is gitignored and must not be committed.
+
+API_KEY = YOUR_API_KEY_HERE

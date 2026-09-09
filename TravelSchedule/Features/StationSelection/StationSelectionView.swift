@@ -14,7 +14,6 @@ struct StationSelectionView: View {
     @Binding var toStation: Station?
     @Binding var navigationPath: NavigationPath
     
-    @State private var searchText = ""
     @State private var viewModel: StationSelectionViewModel
     
     init(
@@ -32,14 +31,6 @@ struct StationSelectionView: View {
         _viewModel = State(initialValue: StationSelectionViewModel(city: city))
     }
     
-    private var filteredStations: [Station] {
-        viewModel.filteredStations(searchText: searchText)
-    }
-    
-    private var isSearchActive: Bool {
-        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-    
     var body: some View {
         VStack(spacing: 16) {
             HStack(spacing: 8) {
@@ -48,7 +39,7 @@ struct StationSelectionView: View {
                 
                 TextField(
                     "",
-                    text: $searchText,
+                    text: $viewModel.searchText,
                     prompt: Text("Введите запрос")
                         .foregroundStyle(.grayUniversal)
                         .font(.system(size: 17, weight: .regular))
@@ -65,13 +56,13 @@ struct StationSelectionView: View {
             }
             .padding(.horizontal, 16)
             
-            if filteredStations.isEmpty && isSearchActive {
+            if viewModel.filteredStations.isEmpty && viewModel.isSearchActive {
                 Text("Станция не найдена")
                     .foregroundStyle(.blackDayNight)
                     .font(.system(size: 24, weight: .bold))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                List(filteredStations) { station in
+                List(viewModel.filteredStations) { station in
                     Button {
                         selectStation(station)
                     } label: {

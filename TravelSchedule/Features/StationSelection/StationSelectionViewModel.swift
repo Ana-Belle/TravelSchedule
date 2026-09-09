@@ -11,6 +11,15 @@ import Foundation
 @Observable
 final class StationSelectionViewModel {
     let city: City
+    var searchText = ""
+    
+    var filteredStations: [Station] {
+        filteredStations(searchText: searchText)
+    }
+    
+    var isSearchActive: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
     
     init(city: City) {
         self.city = city

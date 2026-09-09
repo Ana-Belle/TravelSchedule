@@ -8,5 +8,17 @@
 import Foundation
 
 enum Constants {
-    static let apiKey = "c9e37d2b-084c-4bff-b9cd-08cbf3921b84"
+    static var apiKey: String {
+        if let key = Bundle.main.object(forInfoDictionaryKey: "API_KEY") as? String, !key.isEmpty {
+            return key
+        }
+        
+        if let bundle = Bundle(identifier: "ru.ana-belle.TravelSchedule"),
+           let key = bundle.object(forInfoDictionaryKey: "API_KEY") as? String,
+           !key.isEmpty {
+            return key
+        }
+        
+        return ""
+    }
 }

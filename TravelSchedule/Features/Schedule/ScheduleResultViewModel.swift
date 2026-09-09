@@ -20,7 +20,12 @@ final class ScheduleResultViewModel {
     var hasMoreDays = true
     var hasCompletedInitialLoad = false
     var errorState: AppErrorState?
-    var filters = ScheduleFilters()
+    var filters = ScheduleFilters() {
+        didSet {
+            guard oldValue != filters else { return }
+            applyFilters()
+        }
+    }
     
     private var cacheWithTransfers = ScheduleCache()
     private var cacheDirect = ScheduleCache()
@@ -70,7 +75,7 @@ final class ScheduleResultViewModel {
         
         do {
             try await loadInitialBatch(for: effectiveTransfers, service: scheduleService)
-            applyFilters(filters)
+            applyFilters()
         } catch {
             errorState = AppErrorState(error: error)
         }
@@ -87,15 +92,13 @@ final class ScheduleResultViewModel {
         
         do {
             try await loadNextDays(count: loadMoreDayCount, for: effectiveTransfers, service: scheduleService)
-            applyFilters(filters)
+            applyFilters()
         } catch {
             errorState = AppErrorState(error: error)
         }
     }
     
-    func applyFilters(_ appliedFilters: ScheduleFilters) {
-        filters = appliedFilters
-        
+    func applyFilters() {
         if activeCache.hasInitialLoad {
             scheduleItems = filterItems(activeItems)
             return

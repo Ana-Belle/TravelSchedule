@@ -50,11 +50,16 @@ enum DepartureTimePeriod: String, CaseIterable, Identifiable, Hashable, Sendable
     }
     
     func contains(departureTime: String) -> Bool {
-        Self.isDepartureTime(
-            departureTime,
-            greaterThanOrEqualTo: startTime,
-            lessThan: endTimeExclusive
-        )
+        switch self {
+        case .morning:
+            Self.isDepartureTime(departureTime, greaterThanOrEqualTo: "06:00", lessThan: "12:00")
+        case .afternoon:
+            Self.isDepartureTime(departureTime, greaterThanOrEqualTo: "12:00", lessThan: "18:00")
+        case .evening:
+            Self.isDepartureTime(departureTime, greaterThanOrEqualTo: "18:00", lessThan: "00:00")
+        case .night:
+            Self.isDepartureTime(departureTime, greaterThanOrEqualTo: "00:00", lessThan: "06:00")
+        }
     }
     
     // MARK: - Static Methods
@@ -88,33 +93,5 @@ enum DepartureTimePeriod: String, CaseIterable, Identifiable, Hashable, Sendable
         }
         
         return value >= startMinutes && value < endMinutes
-    }
-    
-    // MARK: - Private Properties
-    
-    private var startTime: String {
-        switch self {
-        case .morning:
-            "06:00"
-        case .afternoon:
-            "12:00"
-        case .evening:
-            "18:00"
-        case .night:
-            "00:00"
-        }
-    }
-    
-    private var endTimeExclusive: String {
-        switch self {
-        case .morning:
-            "12:00"
-        case .afternoon:
-            "18:00"
-        case .evening:
-            "00:00"
-        case .night:
-            "06:00"
-        }
     }
 }
